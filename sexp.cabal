@@ -22,7 +22,7 @@ Source-repository head
   Location:             https://github.com/scvalex/sexp.git
 
 Library
-  Build-depends:        base >= 4 && < 5
+  Build-depends:        base >= 4 && < 5, attoparsec, bytestring
   Ghc-options:          -Wall
   Exposed-modules:      Language.Sexp
 

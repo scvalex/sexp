@@ -2,5 +2,7 @@ module Language.Sexp (
         Sexp(..)
     ) where
 
-data Sexp = List [Sexp] | Atom String
+import Data.ByteString.Lazy
+
+data Sexp = List [Sexp] | Atom ByteString
 
