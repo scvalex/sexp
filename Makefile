@@ -24,4 +24,4 @@ doc: build
 	cabal-dev haddock
 
 p:
-	permamake.sh *.hs *.cabal Makefile
+	permamake.sh $(shell find Language/ -name '*.hs') *.cabal Makefile

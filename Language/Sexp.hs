@@ -1,8 +1,6 @@
 module Language.Sexp (
-        Sexp(..)
+        module Language.Sexp.Parser
     ) where
 
-import Data.ByteString.Lazy
-
-data Sexp = List [Sexp] | Atom ByteString
+import Language.Sexp.Parser
 
