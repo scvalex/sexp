@@ -62,8 +62,8 @@ data Config = TcpConfig { useSSL :: Bool
                         , target :: ByteString
                         , port   :: Int
                         }
-            | UdpConfig { udpTarget :: (Int, Int, Int, Int)
-                        , udpPort   :: Integer
+            | UdpConfig { udpTarget   :: (Int, Int, Int, Int)
+                        , udpPorts    :: [Integer]
                         , failureRate :: Double
                         }
             deriving ( Generic )
@@ -79,10 +79,10 @@ gTests = [let config = TcpConfig True "www.google.com" 80
                                          , List [ List [Atom "useSSL", toSexp s]
                                                 , List [Atom "target", toSexp t]
                                                 , List [Atom "port", toSexp p] ] ])
-    manualSexp (UdpConfig (t1, t2, t3, t4) p fr) =
+    manualSexp (UdpConfig (t1, t2, t3, t4) ps fr) =
         (List [ Atom "UdpConfig"
               , List [ List [Atom "udpTarget", List [toSexp t1, toSexp t2, toSexp t3, toSexp t4]]
-                     , List [Atom "udpPort", toSexp p]
+                     , List [Atom "udpPort", List (map toSexp ps)]
                      , List [Atom "failureRate", toSexp fr] ] ])
 
 --------------------------------

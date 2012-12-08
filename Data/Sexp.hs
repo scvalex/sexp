@@ -6,7 +6,7 @@ module Data.Sexp (
         escape, unescape
     ) where
 
-import Data.ByteString.Lazy.Char8 as BS
+import Data.ByteString.Lazy.Char8 as BS hiding ( map )
 import GHC.Generics
 
 -- | A 'ByteString'-based S-Expression.  You can a lazy 'ByteString'
@@ -87,6 +87,9 @@ instance (Sexpable a, Sexpable b, Sexpable c) => Sexpable (a, b, c) where
 
 instance (Sexpable a, Sexpable b, Sexpable c, Sexpable d) => Sexpable (a, b, c, d) where
     toSexp (x, y, z, t) = List [toSexp x, toSexp y, toSexp z, toSexp t]
+
+instance (Sexpable a) => Sexpable [a] where
+    toSexp xs = List (map toSexp xs)
 
 -- | Escape @"@ and @\@ in the given string.  This needs to be done
 -- for double-quoted atoms (e.g. @"\"Hello\", he said"@).
