@@ -32,7 +32,7 @@ instance (GSexpable a, GSexpable b) => GSexpable (a :*: b) where
         let (List xs, False) = gToSexp x in
         let (List ys, shouldConcat) = gToSexp y in
         if shouldConcat
-        then (List (xs ++ ys), True)
+        then (List (List xs : ys), True)
         else (List [List xs, List ys], True)
 
 instance (GSexpable a, GSexpable b) => GSexpable (a :+: b) where
@@ -44,17 +44,15 @@ instance (GSexpable a, Datatype c) => GSexpable (M1 D c a) where
 
 instance (GSexpable a, Selector c) => GSexpable (M1 S c a) where
     gToSexp c@(M1 x) =
-        case gToSexp x of
-            (List xs, _)  -> (List (name : xs), False)
-            (Atom x', False) -> (List [name, Atom x'], False)
-      where
-        name = Atom (pack (selName c))
+        let (xs, _) = gToSexp x
+        in (List [Atom (pack (selName c)), xs], False)
 
 instance (GSexpable a, Constructor c) => GSexpable (M1 C c a) where
     gToSexp c@(M1 x) =
         case gToSexp x of
             (List [], _) -> (List [Atom (pack (conName c))], False)
             (List xs, _) -> (List [Atom (pack (conName c)), List xs], False)
+            _            -> error "constructor case broken in generics reification"
 
 instance (Sexpable a) => GSexpable (K1 i a) where
     gToSexp (K1 x) = (toSexp x, False)

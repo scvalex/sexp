@@ -71,9 +71,9 @@ gTests = [let config = TcpConfig True "www.google.com" 80
          ]
   where
     manualSexp (TcpConfig s t p) = (List [ Atom "TcpConfig"
-                                         , List [Atom "useSSL", toSexp s]
-                                         , List [Atom "target", toSexp t]
-                                         , List [Atom "port", toSexp p] ])
+                                         , List [ List [Atom "useSSL", toSexp s]
+                                                , List [Atom "target", toSexp t]
+                                                , List [Atom "port", toSexp p] ] ])
 
 --------------------------------
 -- QuickCheck Properties
