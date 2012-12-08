@@ -76,8 +76,10 @@ data Config = TcpConfig { useSSL :: Bool
 instance Sexpable Config
 
 gTests :: [Test]
-gTests = [let config = TcpConfig True "www.google.com" (Fallback 443 (Fallback 80 None))
-          in testCase "config1" (assertEqual "" (manualSexp config) (toSexp config))
+gTests = [ let config = TcpConfig True "www.google.com" (Fallback 443 (Fallback 80 None))
+           in testCase "config1" (assertEqual "" (manualSexp config) (toSexp config))
+         , let config = UdpConfig (192, 168, 0, 1) [20, 21, 22] 0.12
+           in testCase "config2" (assertEqual "" (manualSexp config) (toSexp config))
          ]
   where
     manualFallbackSexp None =
@@ -92,7 +94,7 @@ gTests = [let config = TcpConfig True "www.google.com" (Fallback 443 (Fallback 8
     manualSexp (UdpConfig (t1, t2, t3, t4) ps fr) =
         (List [ Atom "UdpConfig"
               , List [ List [Atom "udpTarget", List [toSexp t1, toSexp t2, toSexp t3, toSexp t4]]
-                     , List [Atom "udpPort", List (map toSexp ps)]
+                     , List [Atom "udpPorts", List (map toSexp ps)]
                      , List [Atom "failureRate", toSexp fr] ] ])
 
 --------------------------------
