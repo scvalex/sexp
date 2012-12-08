@@ -6,7 +6,7 @@ module Data.Sexp (
         escape, unescape
     ) where
 
-import Data.ByteString.Lazy.Char8 as BS hiding ( map )
+import Data.ByteString.Lazy.Char8 as BS hiding ( map, null )
 import GHC.Generics
 
 -- | A 'ByteString'-based S-Expression.  You can a lazy 'ByteString'
@@ -29,11 +29,11 @@ instance GSexpable U1 where
 
 instance (GSexpable a, GSexpable b) => GSexpable (a :*: b) where
     gToSexp (x :*: y) =
-        let (List xs, False) = gToSexp x in
+        let (xs, False) = gToSexp x in
         let (List ys, shouldConcat) = gToSexp y in
         if shouldConcat
-        then (List (List xs : ys), True)
-        else (List [List xs, List ys], True)
+        then (List (xs : ys), True)
+        else (List [xs, List ys], True)
 
 instance (GSexpable a, GSexpable b) => GSexpable (a :+: b) where
     gToSexp (L1 x) = let (List xs, False) = gToSexp x in (List xs, False)
@@ -45,7 +45,9 @@ instance (GSexpable a, Datatype c) => GSexpable (M1 D c a) where
 instance (GSexpable a, Selector c) => GSexpable (M1 S c a) where
     gToSexp c@(M1 x) =
         let (xs, _) = gToSexp x
-        in (List [Atom (pack (selName c)), xs], False)
+        in if null (selName c)
+           then (xs, False)
+           else (List [Atom (pack (selName c)), xs], False)
 
 instance (GSexpable a, Constructor c) => GSexpable (M1 C c a) where
     gToSexp c@(M1 x) =

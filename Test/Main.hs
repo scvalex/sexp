@@ -58,9 +58,14 @@ basicTypeTests =
     , testCase "boolTrue" (assertEqual "" (List [Atom "True"]) (toSexp True))
     ]
 
+data Fallback a = None | Fallback a (Fallback a)
+                deriving ( Generic )
+
+instance (Sexpable a) => Sexpable (Fallback a)
+
 data Config = TcpConfig { useSSL :: Bool
                         , target :: ByteString
-                        , port   :: Int
+                        , port   :: Fallback Int
                         }
             | UdpConfig { udpTarget   :: (Int, Int, Int, Int)
                         , udpPorts    :: [Integer]
@@ -71,14 +76,17 @@ data Config = TcpConfig { useSSL :: Bool
 instance Sexpable Config
 
 gTests :: [Test]
-gTests = [let config = TcpConfig True "www.google.com" 80
+gTests = [let config = TcpConfig True "www.google.com" (Fallback 443 (Fallback 80 None))
           in testCase "config1" (assertEqual "" (manualSexp config) (toSexp config))
          ]
   where
+    manualFallbackSexp None = List [Atom "None"]
+    manualFallbackSexp (Fallback x fb) = List [Atom "Fallback", List [toSexp x, manualFallbackSexp fb]]
+
     manualSexp (TcpConfig s t p) = (List [ Atom "TcpConfig"
                                          , List [ List [Atom "useSSL", toSexp s]
                                                 , List [Atom "target", toSexp t]
-                                                , List [Atom "port", toSexp p] ] ])
+                                                , List [Atom "port", manualFallbackSexp p] ] ])
     manualSexp (UdpConfig (t1, t2, t3, t4) ps fr) =
         (List [ Atom "UdpConfig"
               , List [ List [Atom "udpTarget", List [toSexp t1, toSexp t2, toSexp t3, toSexp t4]]
