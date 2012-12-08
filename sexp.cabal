@@ -8,7 +8,7 @@ Author:         Alexandru Scvortov <scvalex@gmail.com>
 Maintainer:     scvalex@gmail.com
 Homepage:       https://github.com/scvalex/sexp
 Category:       Language, Parsing
-Synopsis:       S-Expression parsing, printing, and type reification
+Synopsis:       S-Expression parsing, printing, and generics-based type reification
 Build-Type:     Simple
 Description:
         See the @README.md@ file and the homepage for details.
