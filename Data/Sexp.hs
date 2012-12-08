@@ -41,7 +41,7 @@ instance Sexpable ByteString where
 escape :: ByteString -> ByteString
 escape = BS.concatMap escapeChar
   where
-    escapeChar '\\' = "\\"
+    escapeChar '\\' = "\\\\"
     escapeChar '"'  = "\\\""
     escapeChar c    = BS.singleton c
 
