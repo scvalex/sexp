@@ -18,7 +18,7 @@ import Data.Typeable ( Typeable )
 -- | A 'ByteString'-based S-Expression.  You can a lazy 'ByteString'
 -- with 'parse'.
 data Sexp = List [Sexp] | Atom ByteString
-          deriving ( Show )
+          deriving ( Eq, Show )
 
 data ParseException = ParseException String ByteString
                     deriving ( Show, Typeable )
@@ -29,7 +29,7 @@ instance Exception ParseException
 -- successful, @Right sexps@ is returned; otherwise, @Left (errorMsg,
 -- leftover)@ is returned.
 parse :: ByteString -> Either (String, ByteString) [Sexp]
-parse = resultToEither . A.parse (many sexpParser)
+parse = resultToEither . A.parse (many space *> many sexpParser)
   where
     resultToEither (Fail leftover _ctxs reason) =
         Left (reason, leftover)
