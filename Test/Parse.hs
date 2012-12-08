@@ -2,7 +2,7 @@
 
 module Main where
 
-import Data.ByteString.Lazy hiding ( map )
+import Data.ByteString.Lazy.Char8 hiding ( map )
 import Data.Monoid
 import Language.Sexp
 import Test.Framework
