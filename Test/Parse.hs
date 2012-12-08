@@ -2,15 +2,17 @@
 
 module Main where
 
-import Data.ByteString.Lazy.Char8 hiding ( map )
+import Data.ByteString.Lazy.Char8 hiding ( map, concat )
 import Data.Monoid
+import Data.Sexp
 import Language.Sexp
 import Test.Framework
 import Test.Framework.Providers.HUnit
 import Test.HUnit hiding ( Test )
 
 main :: IO ()
-main = defaultMainWithOpts parseTests mempty
+main = flip defaultMainWithOpts mempty
+       (concat [parseTests, basicTypeTests])
 
 --------------------------------
 -- HUnit Tests
@@ -40,4 +42,11 @@ positiveSexps =
                                                    , Atom "b"
                                                    , Atom "c" ]
                                              , List [Atom "d"]])
+    ]
+
+basicTypeTests :: [Test]
+basicTypeTests =
+    [ testCase "int" (assertEqual "" (Just (42 :: Int)) (fromSexp (Atom "42")))
+    , testCase "integer" (assertEqual "" (Just (42 :: Integer)) (fromSexp (Atom "42")))
+    , testCase "double" (assertEqual "" (Just (42.2 :: Double)) (fromSexp (Atom "42.2")))
     ]
