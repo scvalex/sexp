@@ -80,8 +80,10 @@ gTests = [let config = TcpConfig True "www.google.com" (Fallback 443 (Fallback 8
           in testCase "config1" (assertEqual "" (manualSexp config) (toSexp config))
          ]
   where
-    manualFallbackSexp None = List [Atom "None"]
-    manualFallbackSexp (Fallback x fb) = List [Atom "Fallback", List [toSexp x, manualFallbackSexp fb]]
+    manualFallbackSexp None =
+        List [Atom "None"]
+    manualFallbackSexp (Fallback x fb) =
+        List [Atom "Fallback", List [toSexp x, manualFallbackSexp fb]]
 
     manualSexp (TcpConfig s t p) = (List [ Atom "TcpConfig"
                                          , List [ List [Atom "useSSL", toSexp s]
