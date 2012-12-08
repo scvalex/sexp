@@ -13,12 +13,8 @@ import Data.Attoparsec.ByteString.Char8 ( char, space, takeWhile1, notInClass, (
 import Data.Attoparsec.Combinator ( choice )
 import qualified Data.Attoparsec.ByteString.Lazy as A
 import Data.ByteString.Lazy as BS
+import Data.Sexp ( Sexp(..) )
 import Data.Typeable ( Typeable )
-
--- | A 'ByteString'-based S-Expression.  You can a lazy 'ByteString'
--- with 'parse'.
-data Sexp = List [Sexp] | Atom ByteString
-          deriving ( Eq, Show )
 
 data ParseException = ParseException String ByteString
                     deriving ( Show, Typeable )
