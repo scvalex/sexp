@@ -1,7 +1,8 @@
-{-# LANGUAGE Safe #-}
+{-# LANGUAGE Safe, OverloadedStrings #-}
 
 module Data.Sexp (
-        Sexp(..), Sexpable(..)
+        Sexp(..), Sexpable(..),
+        escape, unescape
     ) where
 
 import Data.ByteString.Lazy.Char8 as BS
@@ -31,6 +32,23 @@ instance Sexpable Double where
     fromSexp _        = fail "not an atom"
 
 instance Sexpable ByteString where
-    toSexp s = Atom (snoc (cons '"' s) '"')
-    fromSexp (Atom s) = return s
+    toSexp s = Atom (escape s)
+    fromSexp (Atom s) = return (unescape s)
     fromSexp _        = fail "not an atom"
+
+-- | Escape @"@ and @\@ in the given string.  This needs to be done
+-- for double-quoted atoms (e.g. @"\"Hello\", he said"@).
+escape :: ByteString -> ByteString
+escape = BS.concatMap escapeChar
+  where
+    escapeChar '\\' = "\\"
+    escapeChar '"'  = "\\\""
+    escapeChar c    = BS.singleton c
+
+-- | The inverse of 'escape'.
+unescape :: ByteString -> ByteString
+unescape = BS.reverse . pack . snd . (BS.foldl' unescapeChar (False, []))
+  where
+    unescapeChar :: (Bool, [Char]) -> Char -> (Bool, [Char])
+    unescapeChar (False, cs) '\\' = (True, cs)
+    unescapeChar (_, cs) c        = (False, c : cs)

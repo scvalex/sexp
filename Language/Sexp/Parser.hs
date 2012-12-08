@@ -56,6 +56,13 @@ sexpParser =
            ]
   where
     list = List <$> (char '(' *> many space *> many sexpParser <* char ')') <* many space
-    atom = Atom . fromStrict <$> (choice [string, anything]) <* many space
-    string = char '"' *> AC.takeWhile ('"'/=) <* char '"'
-    anything = AC.takeWhile1 (notInClass " \t\n()")
+    atom = Atom <$> (choice [string, anything]) <* many space
+    string = fromStrict <$> (char '"' *> AC.scan False escapedStringScanner <* char '"')
+    anything = fromStrict <$> AC.takeWhile1 (notInClass " \t\n()")
+
+    -- Scan an escaped string.
+    escapedStringScanner :: Bool -> Char -> Maybe Bool
+    escapedStringScanner True _     = Just False
+    escapedStringScanner False '\\' = Just True
+    escapedStringScanner False '"'  = Nothing
+    escapedStringScanner False _    = Just False
