@@ -1,4 +1,5 @@
-{-# LANGUAGE Safe, OverloadedStrings, DefaultSignatures, FlexibleContexts, TypeOperators #-}
+{-# LANGUAGE Safe, OverloadedStrings, DefaultSignatures, FlexibleContexts,
+             TypeOperators, FlexibleInstances #-}
 
 module Data.Sexp (
         Sexp(..), Sexpable(..),
@@ -18,26 +19,47 @@ class Sexpable a where
     fromSexp :: (Monad m) => Sexp -> m a
 
     default toSexp :: (Generic a, GSexpable (Rep a)) => a -> Sexp
-    toSexp x = gToSexp (from x)
+    toSexp x = fst (gToSexp (from x))
 
 class GSexpable a where
-    gToSexp :: a p -> Sexp
+    gToSexp :: a p -> (Sexp, Bool)
 
 instance GSexpable U1 where
-    gToSexp _ = List []
+    gToSexp U1 = (List [], True)
 
 instance (GSexpable a, GSexpable b) => GSexpable (a :*: b) where
-    gToSexp (x :*: y) = List [gToSexp x, gToSexp y]
+    gToSexp (x :*: y) =
+        let (List xs, False) = gToSexp x in
+        let (List ys, shouldConcat) = gToSexp y in
+        if shouldConcat
+        then (List (xs ++ ys), True)
+        else (List [List xs, List ys], True)
 
 instance (GSexpable a, GSexpable b) => GSexpable (a :+: b) where
-    gToSexp (L1 x) = List [Atom "left", gToSexp x]
-    gToSexp (R1 x) = List [Atom "right", gToSexp x]
+    gToSexp (L1 x) = let (List xs, False) = gToSexp x in (List xs, False)
+    gToSexp (R1 x) = let (List xs, False) = gToSexp x in (List xs, False)
 
-instance (GSexpable a) => GSexpable (M1 i c a) where
+instance (GSexpable a, Datatype c) => GSexpable (M1 D c a) where
     gToSexp (M1 x) = gToSexp x
 
+instance (GSexpable a, Selector c) => GSexpable (M1 S c a) where
+    gToSexp c@(M1 x) =
+        case gToSexp x of
+            (List xs, _)  -> (List (name : xs), False)
+            (Atom x', False) -> (List [name, Atom x'], False)
+      where
+        name = Atom (pack (selName c))
+
+instance (GSexpable a, Constructor c) => GSexpable (M1 C c a) where
+    gToSexp c@(M1 x) =
+        case gToSexp x of
+            (List [], _) -> (List [Atom (pack (conName c))], False)
+            (List xs, _) -> (List [Atom (pack (conName c)), List xs], False)
+
 instance (Sexpable a) => GSexpable (K1 i a) where
-    gToSexp (K1 x) = toSexp x
+    gToSexp (K1 x) = (toSexp x, False)
+
+instance Sexpable Bool
 
 instance Sexpable Int where
     toSexp n = Atom (pack (show n))
