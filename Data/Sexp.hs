@@ -79,6 +79,15 @@ instance Sexpable ByteString where
     fromSexp (Atom s) = return (unescape s)
     fromSexp _        = fail "not an atom"
 
+instance (Sexpable a, Sexpable b) => Sexpable (a, b) where
+    toSexp (x, y) = List [toSexp x, toSexp y]
+
+instance (Sexpable a, Sexpable b, Sexpable c) => Sexpable (a, b, c) where
+    toSexp (x, y, z) = List [toSexp x, toSexp y, toSexp z]
+
+instance (Sexpable a, Sexpable b, Sexpable c, Sexpable d) => Sexpable (a, b, c, d) where
+    toSexp (x, y, z, t) = List [toSexp x, toSexp y, toSexp z, toSexp t]
+
 -- | Escape @"@ and @\@ in the given string.  This needs to be done
 -- for double-quoted atoms (e.g. @"\"Hello\", he said"@).
 escape :: ByteString -> ByteString

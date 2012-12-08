@@ -61,7 +61,12 @@ basicTypeTests =
 data Config = TcpConfig { useSSL :: Bool
                         , target :: ByteString
                         , port   :: Int
-                        } deriving ( Generic )
+                        }
+            | UdpConfig { udpTarget :: (Int, Int, Int, Int)
+                        , udpPort   :: Integer
+                        , failureRate :: Double
+                        }
+            deriving ( Generic )
 
 instance Sexpable Config
 
@@ -74,6 +79,11 @@ gTests = [let config = TcpConfig True "www.google.com" 80
                                          , List [ List [Atom "useSSL", toSexp s]
                                                 , List [Atom "target", toSexp t]
                                                 , List [Atom "port", toSexp p] ] ])
+    manualSexp (UdpConfig (t1, t2, t3, t4) p fr) =
+        (List [ Atom "UdpConfig"
+              , List [ List [Atom "udpTarget", List [toSexp t1, toSexp t2, toSexp t3, toSexp t4]]
+                     , List [Atom "udpPort", toSexp p]
+                     , List [Atom "failureRate", toSexp fr] ] ])
 
 --------------------------------
 -- QuickCheck Properties
