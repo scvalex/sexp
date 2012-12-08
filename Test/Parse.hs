@@ -49,4 +49,5 @@ basicTypeTests =
     [ testCase "int" (assertEqual "" (Just (42 :: Int)) (fromSexp (Atom "42")))
     , testCase "integer" (assertEqual "" (Just (42 :: Integer)) (fromSexp (Atom "42")))
     , testCase "double" (assertEqual "" (Just (42.2 :: Double)) (fromSexp (Atom "42.2")))
+    , testCase "string" (assertEqual "" (Just ("ana" :: ByteString)) (fromSexp (Atom "ana")))
     ]

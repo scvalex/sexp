@@ -29,3 +29,8 @@ instance Sexpable Double where
     toSexp n = Atom (pack (show n))
     fromSexp (Atom s) = return $ read (unpack s)
     fromSexp _        = fail "not an atom"
+
+instance Sexpable ByteString where
+    toSexp s = Atom (snoc (cons '"' s) '"')
+    fromSexp (Atom s) = return s
+    fromSexp _        = fail "not an atom"

@@ -9,7 +9,8 @@ import Control.Applicative ( (<$>), (<*), (*>), many )
 import Control.Exception ( Exception )
 import qualified Control.Exception as CE
 import Data.Attoparsec.ByteString.Lazy ( Parser, Result(..) )
-import Data.Attoparsec.ByteString.Char8 ( char, space, takeWhile1, notInClass, (<?>) )
+import Data.Attoparsec.ByteString.Char8 ( char, space, notInClass, (<?>) )
+import qualified Data.Attoparsec.ByteString.Char8 as AC
 import Data.Attoparsec.Combinator ( choice )
 import qualified Data.Attoparsec.ByteString.Lazy as A
 import Data.ByteString.Lazy as BS
@@ -46,7 +47,7 @@ parseExn text =
 -- following EBNF:
 --
 -- SEXP ::= '(' ATOM* ')' | ATOM
--- ATOM ::= [^ \t\n()]+
+-- ATOM ::= '"' [^"]* '"' | [^ \t\n()]+
 --
 sexpParser :: Parser Sexp
 sexpParser =
@@ -55,4 +56,6 @@ sexpParser =
            ]
   where
     list = List <$> (char '(' *> many space *> many sexpParser <* char ')') <* many space
-    atom = Atom . fromStrict <$> (takeWhile1 (notInClass " \t\n()") <* many space)
+    atom = Atom . fromStrict <$> (choice [string, anything]) <* many space
+    string = char '"' *> AC.takeWhile ('"'/=) <* char '"'
+    anything = AC.takeWhile1 (notInClass " \t\n()")
