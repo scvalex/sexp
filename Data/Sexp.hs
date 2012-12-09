@@ -6,6 +6,7 @@ module Data.Sexp (
         escape, unescape
     ) where
 
+import Control.Applicative
 import Data.ByteString.Lazy.Char8 as BS hiding ( map, null )
 import GHC.Generics
 
@@ -16,16 +17,23 @@ data Sexp = List [Sexp] | Atom ByteString
 
 class Sexpable a where
     toSexp :: a -> Sexp
-    fromSexp :: (Monad m) => Sexp -> m a
+    fromSexp :: (Monad m, Applicative m) => Sexp -> m a
 
     default toSexp :: (Generic a, GSexpable (Rep a)) => a -> Sexp
     toSexp x = fst (gToSexp (from x))
 
+    default fromSexp :: (Generic a, GSexpable (Rep a), Monad m, Applicative m) => Sexp -> m a
+    fromSexp x = to <$> gFromSexp x
+
 class GSexpable a where
     gToSexp :: a p -> (Sexp, Bool)
+    gFromSexp :: (Monad m, Applicative m) => Sexp -> m (a p)
 
 instance GSexpable U1 where
     gToSexp U1 = (List [], True)
+
+    gFromSexp (List []) = return U1
+    gFromSexp _         = fail "not an empty constructor"
 
 instance (GSexpable a, GSexpable b) => GSexpable (a :*: b) where
     gToSexp (x :*: y) =
@@ -35,12 +43,21 @@ instance (GSexpable a, GSexpable b) => GSexpable (a :*: b) where
         then (List (xs : ys), True)
         else (List [xs, List ys], True)
 
+    gFromSexp (List (x1:x2:xs)) = do
+        (:*:) <$> gFromSexp x1 <*> gFromSexp (List (x2:xs))
+    gFromSexp _ =
+        fail "not a product type"
+
 instance (GSexpable a, GSexpable b) => GSexpable (a :+: b) where
     gToSexp (L1 x) = let (List xs, False) = gToSexp x in (List xs, False)
     gToSexp (R1 x) = let (List xs, False) = gToSexp x in (List xs, False)
 
+    gFromSexp (List xs) = L1 <$> gFromSexp (List xs)
+    gFromSexp _         = fail "not a sum type"
+
 instance (GSexpable a, Datatype c) => GSexpable (M1 D c a) where
     gToSexp (M1 x) = gToSexp x
+    gFromSexp x = gFromSexp x
 
 instance (GSexpable a, Selector c) => GSexpable (M1 S c a) where
     gToSexp c@(M1 x) =
@@ -49,6 +66,8 @@ instance (GSexpable a, Selector c) => GSexpable (M1 S c a) where
            then (xs, False)
            else (List [Atom (pack (selName c)), xs], False)
 
+    gFromSexp _ = undefined
+
 instance (GSexpable a, Constructor c) => GSexpable (M1 C c a) where
     gToSexp c@(M1 x) =
         case gToSexp x of
@@ -56,8 +75,12 @@ instance (GSexpable a, Constructor c) => GSexpable (M1 C c a) where
             (List xs, _) -> (List [Atom (pack (conName c)), List xs], False)
             _            -> error "constructor case broken in generics reification"
 
+    gFromSexp (List (_:xs)) = M1 <$> gFromSexp (List xs)
+    gFromSexp _             = fail "not a constructor"
+
 instance (Sexpable a) => GSexpable (K1 i a) where
     gToSexp (K1 x) = (toSexp x, False)
+    gFromSexp x    = K1 <$> fromSexp x
 
 instance Sexpable Bool
 
