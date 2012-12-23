@@ -1,10 +1,10 @@
-{-# LANGUAGE OverloadedStrings, DeriveGeneric #-}
+{-# LANGUAGE OverloadedStrings, DeriveDataTypeable #-}
 
 module Main where
 
 import Control.Applicative ( (<$>) )
 import Data.ByteString.Lazy.Char8 hiding ( map, concat )
-import GHC.Generics ( Generic )
+import Data.Data ( Typeable, Data )
 import Data.Monoid
 import Data.Sexp
 import Language.Sexp
@@ -59,9 +59,7 @@ basicTypeTests =
     ]
 
 data Fallback a = None | Fallback a (Fallback a)
-                deriving ( Generic )
-
-instance (Sexpable a) => Sexpable (Fallback a)
+                deriving ( Data, Typeable )
 
 data Config = TcpConfig { useSSL :: Bool
                         , target :: ByteString
@@ -71,9 +69,8 @@ data Config = TcpConfig { useSSL :: Bool
                         , udpPorts    :: [Integer]
                         , failureRate :: Double
                         }
-            deriving ( Generic )
-
-instance Sexpable Config
+            | ErlangConfig String String
+            deriving ( Data, Typeable )
 
 gTests :: [Test]
 gTests = [ let config = TcpConfig True "www.google.com" (Fallback 443 (Fallback 80 None))
@@ -88,7 +85,7 @@ gTests = [ let config = TcpConfig True "www.google.com" (Fallback 443 (Fallback 
         List [Atom "Fallback", List [toSexp x, manualFallbackSexp fb]]
 
     manualSexp (TcpConfig s t p) = (List [ Atom "TcpConfig"
-                                         , List [ List [Atom "useSSL", toSexp s]
+                                         , List [ List [Atom "useSSL", manualBoolSexp s]
                                                 , List [Atom "target", toSexp t]
                                                 , List [Atom "port", manualFallbackSexp p] ] ])
     manualSexp (UdpConfig (t1, t2, t3, t4) ps fr) =
@@ -96,6 +93,8 @@ gTests = [ let config = TcpConfig True "www.google.com" (Fallback 443 (Fallback 
               , List [ List [Atom "udpTarget", List [toSexp t1, toSexp t2, toSexp t3, toSexp t4]]
                      , List [Atom "udpPorts", List (map toSexp ps)]
                      , List [Atom "failureRate", toSexp fr] ] ])
+    manualBoolSexp True = List [Atom "True"]
+    manualBoolSexp False = List [Atom "False"]
 
 --------------------------------
 -- QuickCheck Properties
