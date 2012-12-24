@@ -88,7 +88,9 @@ gTests = let config1 = TcpConfig True "www.google.com" (Fallback 443 (Fallback 8
         testCase name (assertEqual "" (manualSexp config) (toSexp config))
 
     idSexpTest name config =
-        testCase name (assertEqual "" (Just config) (fromSexp (toSexp config)))
+        testCase name (assertEqual ""
+                       (Right config :: Either String Config)
+                       (fromSexp (toSexp config)))
 
     manualFallbackSexp None =
         List [Atom "None"]
