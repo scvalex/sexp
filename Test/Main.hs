@@ -59,7 +59,7 @@ basicTypeTests =
     ]
 
 data Fallback a = None | Fallback a (Fallback a)
-                deriving ( Data, Typeable )
+                deriving ( Data, Eq, Show, Typeable )
 
 data Config = TcpConfig { useSSL :: Bool
                         , target :: ByteString
@@ -70,17 +70,26 @@ data Config = TcpConfig { useSSL :: Bool
                         , failureRate :: Double
                         }
             | ErlangConfig ByteString ByteString ()
-            deriving ( Data, Typeable )
+            deriving ( Data, Eq, Show, Typeable )
 
 gTests :: [Test]
-gTests = [ let config = TcpConfig True "www.google.com" (Fallback 443 (Fallback 80 None))
-           in testCase "config1" (assertEqual "" (manualSexp config) (toSexp config))
-         , let config = UdpConfig (192, 168, 0, 1) [20, 21, 22] 0.12
-           in testCase "config2" (assertEqual "" (manualSexp config) (toSexp config))
-         , let config = ErlangConfig "localhost" "chocolatechip" ()
-           in testCase "config3" (assertEqual "" (manualSexp config) (toSexp config))
-         ]
+gTests = let config1 = TcpConfig True "www.google.com" (Fallback 443 (Fallback 80 None))
+             config2 = UdpConfig (192, 168, 0, 1) [20, 21, 22] 0.12
+             config3 = ErlangConfig "localhost" "chocolatechip" ()
+         in [ manualSexpTest "config1" config1
+            , idSexpTest "config1id" config1
+            , manualSexpTest "config2" config2
+            , idSexpTest "config2id" config2
+            , manualSexpTest "config3" config3
+            , idSexpTest "config3id" config3
+            ]
   where
+    manualSexpTest name config =
+        testCase name (assertEqual "" (manualSexp config) (toSexp config))
+
+    idSexpTest name config =
+        testCase name (assertEqual "" (Just config) (fromSexp (toSexp config)))
+
     manualFallbackSexp None =
         List [Atom "None"]
     manualFallbackSexp (Fallback x fb) =
@@ -99,6 +108,7 @@ gTests = [ let config = TcpConfig True "www.google.com" (Fallback 443 (Fallback 
                                                     , List [ Atom host
                                                            , Atom cookie
                                                            , List [] ] ]
+
     manualBoolSexp True = List [Atom "True"]
     manualBoolSexp False = List [Atom "False"]
 
