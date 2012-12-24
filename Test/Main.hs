@@ -69,7 +69,7 @@ data Config = TcpConfig { useSSL :: Bool
                         , udpPorts    :: [Integer]
                         , failureRate :: Double
                         }
-            | ErlangConfig String String ()
+            | ErlangConfig ByteString ByteString ()
             deriving ( Data, Typeable )
 
 gTests :: [Test]
@@ -77,6 +77,8 @@ gTests = [ let config = TcpConfig True "www.google.com" (Fallback 443 (Fallback 
            in testCase "config1" (assertEqual "" (manualSexp config) (toSexp config))
          , let config = UdpConfig (192, 168, 0, 1) [20, 21, 22] 0.12
            in testCase "config2" (assertEqual "" (manualSexp config) (toSexp config))
+         , let config = ErlangConfig "localhost" "chocolatechip" ()
+           in testCase "config3" (assertEqual "" (manualSexp config) (toSexp config))
          ]
   where
     manualFallbackSexp None =
@@ -93,6 +95,10 @@ gTests = [ let config = TcpConfig True "www.google.com" (Fallback 443 (Fallback 
               , List [ List [Atom "udpTarget", List [toSexp t1, toSexp t2, toSexp t3, toSexp t4]]
                      , List [Atom "udpPorts", List (map toSexp ps)]
                      , List [Atom "failureRate", toSexp fr] ] ])
+    manualSexp (ErlangConfig host cookie ()) = List [ Atom "ErlangConfig"
+                                                    , List [ Atom host
+                                                           , Atom cookie
+                                                           , List [] ] ]
     manualBoolSexp True = List [Atom "True"]
     manualBoolSexp False = List [Atom "False"]
 
