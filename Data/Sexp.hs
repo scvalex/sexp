@@ -45,6 +45,8 @@ genericToSexp x =
            else List (Atom (pack constrName)
                       : if null fields then [] else [List fields])
     fieldToSexp name field  = List [Atom (pack name), field]
+
+    -- FIXME Nasty hack to avoid defining `ext{3..}Q`
     isTupleConstr ('(' : rest) = dropWhile (==',') rest == ")"
     isTupleConstr _            = False
 
@@ -58,7 +60,23 @@ listToSexp :: (Data a) => [a] -> Sexp
 listToSexp xs = List (map toSexp xs)
 
 fromSexp :: (Data a, Monad m, Applicative m) => Sexp -> m a
-fromSexp = error "fromSexp undefined"
+fromSexp s = genericFromSexp s
+             `extR` byteStringFromSexp s
+
+genericFromSexp :: (Data a, Monad m, Applicative m) => Sexp -> m a
+genericFromSexp (Atom s) = ma
+  where
+    ma = let s' = unpack s
+         in case readConstr (dataTypeOf (unMonad ma)) s' of
+             Nothing -> fail ("unknown value " ++ s')
+             Just c  -> return (fromConstr c)
+    unMonad :: (Monad m) => m a -> a
+    unMonad = error "unMonad"
+genericFromSexp _        = error "fromSexp non-primitive case"
+
+byteStringFromSexp :: (Monad m) => Sexp -> m ByteString
+byteStringFromSexp (Atom bs) = return bs
+byteStringFromSexp _         = fail "invalid ByteString sexp"
 
 -- class Sexpable a where
 --     toSexp :: a -> Sexp

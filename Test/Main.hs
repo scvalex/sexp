@@ -69,7 +69,7 @@ data Config = TcpConfig { useSSL :: Bool
                         , udpPorts    :: [Integer]
                         , failureRate :: Double
                         }
-            | ErlangConfig String String
+            | ErlangConfig String String ()
             deriving ( Data, Typeable )
 
 gTests :: [Test]
