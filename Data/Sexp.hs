@@ -66,6 +66,7 @@ fromSexp :: (Data a, Monad m, Applicative m) => Sexp -> m a
 fromSexp s = genericFromSexp s
              `extR` byteStringFromSexp s
              `extR` unitFromSexp s
+             `ext1R` listFromSexp s
 
 genericFromSexp :: forall a m. (Data a, Monad m, Applicative m) => Sexp -> m a
 genericFromSexp (Atom s) = ma
@@ -144,6 +145,10 @@ byteStringFromSexp _         = fail "invalid ByteString sexp"
 unitFromSexp :: (Monad m) => Sexp -> m ()
 unitFromSexp (List []) = return ()
 unitFromSexp _         = fail "invalid unit sexp"
+
+listFromSexp :: (Data a, Applicative m, Monad m) => Sexp -> m [a]
+listFromSexp (List xs) = mapM fromSexp xs
+listFromSexp _         = fail "invalid list sexp"
 
 -- | Escape @"@ and @\@ in the given string.  This needs to be done
 -- for double-quoted atoms (e.g. @"\"Hello\", he said"@).
