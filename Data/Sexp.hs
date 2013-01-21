@@ -133,7 +133,7 @@ genericFromSexp (List ((Atom constrName) : fields)) = ma
 
     -- Count the number of arguments of a constructor.  We can't use
     -- 'constrFields' because that only includes labeled arguments.
-    numConstrArgs :: (Data a) => a -> Constr -> Int
+    numConstrArgs :: a -> Constr -> Int
     numConstrArgs x c = let f = do modify (+1); return undefined
                         in execState (fromConstrM f c `asTypeOf` return x) 0
 genericFromSexp s = fail (printf "genericFromSexp unknown case: %s" (show s))
