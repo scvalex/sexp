@@ -1,4 +1,5 @@
 {-# LANGUAGE OverloadedStrings, DeriveDataTypeable #-}
+{-# OPTIONS_GHC -fno-warn-orphans #-}
 
 module Main where
 
@@ -12,7 +13,7 @@ import Test.Framework
 import Test.Framework.Providers.HUnit
 import Test.Framework.Providers.QuickCheck2
 import Test.HUnit hiding ( Test )
--- import Test.QuickCheck
+import Test.QuickCheck
 
 main :: IO ()
 main = flip defaultMainWithOpts mempty
@@ -131,6 +132,14 @@ gTests = let config1 = TcpConfig True "www.google.com" (Fallback 443 (Fallback 8
 -- QuickCheck Properties
 --------------------------------
 
+instance Arbitrary Sexp where
+    arbitrary = do
+        n <- choose (1, 2) :: Gen Int
+        case n of
+            1 -> (Atom . pack) <$> arbitrary
+            2 -> List <$> arbitrary
+            _ -> fail "can't touch this"
+
 idTests :: [Test]
 idTests =
     [ testProperty "idInt" (\x -> Just (x :: Int) == fromSexp (toSexp x))
@@ -138,4 +147,5 @@ idTests =
     , testProperty "idDouble" (\x -> Just (x :: Double) == fromSexp (toSexp x))
     , testProperty "idString" (\x -> Just (x :: String) == (unpack <$> fromSexp (toSexp (pack x))))
     , testProperty "stringEscape" (\x -> x == unpack (unescape (escape (pack x))))
+    , testProperty "sexpPrintParse" (\x -> [x] == parseExn (printMach x))
     ]
