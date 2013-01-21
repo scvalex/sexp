@@ -1,4 +1,4 @@
-{-# LANGUAGE OverloadedStrings, ExistentialQuantification, Rank2Types #-}
+{-# LANGUAGE OverloadedStrings #-}
 
 module Data.Sexp (
         Sexp(..), toSexp, fromSexp,
@@ -9,6 +9,8 @@ import Control.Applicative
 import Data.ByteString.Lazy.Char8 as BS hiding ( dropWhile, map, null, zipWith )
 import Data.Data
 import Data.Generics
+import Control.Monad.State ( get, put, execState, modify,
+                             lift, StateT(..), evalStateT )
 
 -- | A 'ByteString'-based S-Expression.  You can a lazy 'ByteString'
 -- with 'parse'.
@@ -63,16 +65,45 @@ fromSexp :: (Data a, Monad m, Applicative m) => Sexp -> m a
 fromSexp s = genericFromSexp s
              `extR` byteStringFromSexp s
 
-genericFromSexp :: (Data a, Monad m, Applicative m) => Sexp -> m a
+genericFromSexp :: forall a m. (Data a, Monad m, Applicative m) => Sexp -> m a
 genericFromSexp (Atom s) = ma
   where
     ma = let s' = unpack s
-         in case readConstr (dataTypeOf (unMonad ma)) s' of
+         in case readConstr (dataTypeOf (undefined :: a)) s' of
              Nothing -> fail ("unknown value " ++ s')
              Just c  -> return (fromConstr c)
-    unMonad :: (Monad m) => m a -> a
-    unMonad = error "unMonad"
-genericFromSexp _        = error "fromSexp non-primitive case"
+genericFromSexp (List ((Atom constrName) : fields)) = ma
+  where
+    ma = let constrName' = unpack constrName
+         in case readConstr typ constrName' of
+             Nothing -> fail ("unknown constructor " ++ constrName')
+             Just c  -> decodeArgs c fields
+
+    typ = dataTypeOf (undefined :: a)
+
+    decodeArgs c = go (numConstrArgs (undefined :: a) c) c (constrFields c)
+
+    go 0 c _ [] = construct c []
+
+    construct :: Constr -> [Sexp] -> m a
+    construct c = evalStateT (fromConstrM constructM c)
+      where
+        -- FIXME Why do I need to specify "forall a" again?
+        constructM :: forall a. (Data a) => StateT [Sexp] m a
+        constructM = do
+            fs <- get
+            case fs of
+                []        -> fail "ran out of constructor arguments"
+                (f : fs') -> do
+                    put fs'
+                    lift $ fromSexp f
+
+    -- Count the number of arguments of a constructor.  We can't use
+    -- 'constrFields' because that only includes labeled arguments.
+    numConstrArgs :: (Data a) => a -> Constr -> Int
+    numConstrArgs x c = let f = do modify (+1); return undefined
+                        in execState (fromConstrM f c `asTypeOf` return x) 0
+genericFromSexp _ = error "genericFromSexp unknown case"
 
 byteStringFromSexp :: (Monad m) => Sexp -> m ByteString
 byteStringFromSexp (Atom bs) = return bs

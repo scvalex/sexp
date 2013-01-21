@@ -70,18 +70,25 @@ data Config = TcpConfig { useSSL :: Bool
                         , failureRate :: Double
                         }
             | ErlangConfig ByteString ByteString ()
+            | EmptyConfig
             deriving ( Data, Eq, Show, Typeable )
+
+-- FIXME Test encoding/decoding of this.
+-- data EmptyConfig
 
 gTests :: [Test]
 gTests = let config1 = TcpConfig True "www.google.com" (Fallback 443 (Fallback 80 None))
              config2 = UdpConfig (192, 168, 0, 1) [20, 21, 22] 0.12
              config3 = ErlangConfig "localhost" "chocolatechip" ()
+             config4 = EmptyConfig
          in [ manualSexpTest "config1" config1
             , idSexpTest "config1id" config1
             , manualSexpTest "config2" config2
             , idSexpTest "config2id" config2
             , manualSexpTest "config3" config3
             , idSexpTest "config3id" config3
+            , manualSexpTest "config4" config4
+            , idSexpTest "config4id" config4
             ]
   where
     manualSexpTest name config =
@@ -110,6 +117,7 @@ gTests = let config1 = TcpConfig True "www.google.com" (Fallback 443 (Fallback 8
                                                     , List [ Atom host
                                                            , Atom cookie
                                                            , List [] ] ]
+    manualSexp EmptyConfig = List [ Atom "EmptyConfig" ]
 
     manualBoolSexp True = List [Atom "True"]
     manualBoolSexp False = List [Atom "False"]

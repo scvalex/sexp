@@ -22,8 +22,9 @@ Source-repository head
   Location:             https://github.com/scvalex/sexp.git
 
 Library
-  Build-depends:        base >= 4 && < 5, attoparsec, bytestring, syb
+  Build-depends:        base >= 4 && < 5, attoparsec, bytestring, mtl, syb
   Ghc-options:          -Wall
+  Extensions:           ScopedTypeVariables
   Exposed-modules:      Data.Sexp, Language.Sexp, Language.Sexp.Parser
 
 Test-suite main
@@ -31,8 +32,9 @@ Test-suite main
   Main-Is:              Main.hs
   Type:                 exitcode-stdio-1.0
 
-  Build-Depends:        base >= 4.6 && <5, attoparsec, bytestring, syb
+  Build-Depends:        base >= 4.6 && <5, attoparsec, bytestring, mtl, syb
   Ghc-Options:          -Wall
+  Extensions:           ScopedTypeVariables
 
   Build-Depends:        test-framework, test-framework-hunit, HUnit,
                         test-framework-quickcheck2, QuickCheck
