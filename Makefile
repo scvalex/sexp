@@ -1,6 +1,6 @@
 all: test
 
-.PHONY: all build dist install clean doc site p
+.PHONY: all build dist install clean doc site p ghci
 
 build: dist/setup-config
 	rm -rf _site _cache
@@ -28,3 +28,6 @@ test: build
 
 p:
 	permamake.sh $(shell find Language/ -name '*.hs') $(shell find Test/ -name '*.hs') $(shell find Data/ -name '*.hs') *.cabal Makefile
+
+ghci: build
+	cabal-dev ghci
