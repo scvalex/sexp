@@ -65,6 +65,7 @@ listToSexp xs = List (map toSexp xs)
 fromSexp :: (Data a, Monad m, Applicative m) => Sexp -> m a
 fromSexp s = genericFromSexp s
              `extR` byteStringFromSexp s
+             `extR` unitFromSexp s
 
 genericFromSexp :: forall a m. (Data a, Monad m, Applicative m) => Sexp -> m a
 genericFromSexp (Atom s) = ma
@@ -134,11 +135,15 @@ genericFromSexp (List ((Atom constrName) : fields)) = ma
     numConstrArgs :: (Data a) => a -> Constr -> Int
     numConstrArgs x c = let f = do modify (+1); return undefined
                         in execState (fromConstrM f c `asTypeOf` return x) 0
-genericFromSexp _ = error "genericFromSexp unknown case"
+genericFromSexp s = fail (printf "genericFromSexp unknown case: %s" (show s))
 
 byteStringFromSexp :: (Monad m) => Sexp -> m ByteString
 byteStringFromSexp (Atom bs) = return bs
 byteStringFromSexp _         = fail "invalid ByteString sexp"
+
+unitFromSexp :: (Monad m) => Sexp -> m ()
+unitFromSexp (List []) = return ()
+unitFromSexp _         = fail "invalid unit sexp"
 
 -- class Sexpable a where
 --     toSexp :: a -> Sexp
