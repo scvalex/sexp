@@ -42,16 +42,11 @@ genericToSexp x =
                 then values
                 else zipWith fieldToSexp labels (gmapQ toSexp x)
     constrSexp =
-        let constrName = showConstr c
-        in if isTupleConstr constrName
-           then List fields
-           else List (Atom (pack constrName)
-                      : if null fields then [] else fields)
+        if isTupleConstr c
+        then List fields
+        else List (Atom (pack (showConstr c))
+                   : if null fields then [] else fields)
     fieldToSexp name field  = List [Atom (pack name), field]
-
-    -- FIXME Nasty hack to avoid defining `ext{3..}Q`
-    isTupleConstr ('(' : rest) = dropWhile (==',') rest == ")"
-    isTupleConstr _            = False
 
 -- | Convert a 'ByteString' to a 'Sexp' by wrapping it in an 'Atom'.
 byteStringToSexp :: ByteString -> Sexp
@@ -166,3 +161,10 @@ unescape = BS.reverse . pack . snd . (BS.foldl' unescapeChar (False, []))
     unescapeChar :: (Bool, [Char]) -> Char -> (Bool, [Char])
     unescapeChar (False, cs) '\\' = (True, cs)
     unescapeChar (_, cs) c        = (False, c : cs)
+
+-- FIXME Nasty hack to avoid defining @ext{3..}Q@.
+isTupleConstr :: Constr -> Bool
+isTupleConstr c = go (showConstr c)
+  where
+    go ('(' : rest) = dropWhile (==',') rest == ")"
+    go _            = False
