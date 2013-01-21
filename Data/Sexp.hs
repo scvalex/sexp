@@ -120,7 +120,7 @@ genericFromSexp (List ((Atom constrName) : fields)) = ma
     construct c = evalStateT (fromConstrM constructM c)
       where
         -- FIXME Why do I need to specify "forall a" again?
-        constructM :: forall a. (Data a) => StateT [Sexp] m a
+        constructM :: (Data b) => StateT [Sexp] m b
         constructM = do
             fs <- get
             case fs of
