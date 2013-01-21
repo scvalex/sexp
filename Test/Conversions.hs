@@ -16,8 +16,10 @@ import Test.HUnit hiding ( Test )
 import Test.QuickCheck
 
 main :: IO ()
-main = flip defaultMainWithOpts mempty
-       (concat [parseTests, basicTypeTests, idTests, gTests])
+main = defaultMainWithOpts tests options
+  where
+    tests = (concat [parseTests, basicTypeTests, idTests, gTests])
+    options = mempty { ropt_test_options = Just (mempty { topt_timeout = Just (Just 5000000) }) }
 
 --------------------------------
 -- HUnit Tests

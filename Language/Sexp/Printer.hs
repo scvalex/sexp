@@ -10,7 +10,7 @@ import Data.Sexp ( Sexp(..), escape )
 -- | Pretty print a 'Sexp' with minimal formatting.  Suitable for
 -- machine processing.
 printMach :: Sexp -> ByteString
-printMach (Atom s) = escape s
+printMach (Atom s)  = BS.concat ["\"", escape s, "\""]
 printMach (List xs) = BS.concat ["(", BS.intercalate " " (map printMach xs), ")"]
 
 -- | Pretty print a 'Sexp' in a human-friendly way.
