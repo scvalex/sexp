@@ -6,7 +6,7 @@ module Data.Sexp (
     ) where
 
 import Control.Applicative
-import Data.ByteString.Lazy.Char8 as BS hiding ( dropWhile, map, null, zipWith, length )
+import Data.ByteString.Lazy.Char8 as BS hiding ( dropWhile, map, null, zipWith, length, elem )
 import Data.Data
 import Data.Generics
 import Control.Monad.State ( get, put, execState, modify,
@@ -88,7 +88,33 @@ genericFromSexp (List ((Atom constrName) : fields)) = ma
         in if expectedArgs /= gotArgs
            then fail (printf "wrong number of constructor arguments: %s; expected %d; got %d"
                       (show c) expectedArgs gotArgs)
-           else construct c fs
+           else sortFields c fs >>= construct c
+
+    sortFields :: Constr -> [Sexp] -> m [Sexp]
+    sortFields _ []         = return []
+    sortFields c fs@(f : _) =
+        case f of
+            List [label, _] | label `elem` (map (Atom . pack) constructorFields) ->
+                -- Fields are labeled, so strip the labels, and sort
+                -- them in the order of defined labels.
+                mapM tupleizeField fs >>= go constructorFields
+            _ ->
+                -- Fields are unlabeled, so there's nothing to do.
+                return fs
+      where
+        constructorFields = constrFields c
+
+        tupleizeField (List [label, value]) = return (label, value)
+        tupleizeField s                     = fail (printf "not a label-value pair: %s" (show s))
+
+        go :: [String] -> [(Sexp, Sexp)] -> m [Sexp]
+        go (cf : cfs) fps =
+            case lookup (Atom (pack cf)) fps of
+                Nothing -> fail (printf "argument %s of constructor %s not found" cf (show c))
+                Just f' -> do
+                    fs' <- go cfs fps
+                    return (f' : fs')
+        go [] _ = return []
 
     construct :: Constr -> [Sexp] -> m a
     construct c = evalStateT (fromConstrM constructM c)
