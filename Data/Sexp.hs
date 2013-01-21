@@ -6,11 +6,12 @@ module Data.Sexp (
     ) where
 
 import Control.Applicative
-import Data.ByteString.Lazy.Char8 as BS hiding ( dropWhile, map, null, zipWith )
+import Data.ByteString.Lazy.Char8 as BS hiding ( dropWhile, map, null, zipWith, length )
 import Data.Data
 import Data.Generics
 import Control.Monad.State ( get, put, execState, modify,
                              lift, StateT(..), evalStateT )
+import Text.Printf ( printf )
 
 -- | A 'ByteString'-based S-Expression.  You can a lazy 'ByteString'
 -- with 'parse'.
@@ -45,7 +46,7 @@ genericToSexp x =
         in if isTupleConstr constrName
            then List fields
            else List (Atom (pack constrName)
-                      : if null fields then [] else [List fields])
+                      : if null fields then [] else fields)
     fieldToSexp name field  = List [Atom (pack name), field]
 
     -- FIXME Nasty hack to avoid defining `ext{3..}Q`
@@ -70,20 +71,24 @@ genericFromSexp (Atom s) = ma
   where
     ma = let s' = unpack s
          in case readConstr (dataTypeOf (undefined :: a)) s' of
-             Nothing -> fail ("unknown value " ++ s')
+             Nothing -> fail (printf "unknown atomic value: %s" s')
              Just c  -> return (fromConstr c)
 genericFromSexp (List ((Atom constrName) : fields)) = ma
   where
     ma = let constrName' = unpack constrName
          in case readConstr typ constrName' of
-             Nothing -> fail ("unknown constructor " ++ constrName')
+             Nothing -> fail (printf "unknown constructor: %s" constrName')
              Just c  -> decodeArgs c fields
 
     typ = dataTypeOf (undefined :: a)
 
-    decodeArgs c = go (numConstrArgs (undefined :: a) c) c (constrFields c)
-
-    go 0 c _ [] = construct c []
+    decodeArgs c fs =
+        let expectedArgs = numConstrArgs (undefined :: a) c
+            gotArgs = length fs
+        in if expectedArgs /= gotArgs
+           then fail (printf "wrong number of constructor arguments: %s; expected %d; got %d"
+                      (show c) expectedArgs gotArgs)
+           else construct c fs
 
     construct :: Constr -> [Sexp] -> m a
     construct c = evalStateT (fromConstrM constructM c)

@@ -27,9 +27,9 @@ Library
   Extensions:           ScopedTypeVariables
   Exposed-modules:      Data.Sexp, Language.Sexp, Language.Sexp.Parser
 
-Test-suite main
+Test-suite conversions
   Hs-Source-Dirs:       Test, .
-  Main-Is:              Main.hs
+  Main-Is:              Conversions.hs
   Type:                 exitcode-stdio-1.0
 
   Build-Depends:        base >= 4.6 && <5, attoparsec, bytestring, mtl, syb
