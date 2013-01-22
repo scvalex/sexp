@@ -26,7 +26,7 @@ instance Exception ParseException
 -- successful, @Right sexps@ is returned; otherwise, @Left (errorMsg,
 -- leftover)@ is returned.
 parse :: ByteString -> Either (String, ByteString) [Sexp]
-parse = resultToEither . A.parse (many space *> many sexpParser)
+parse = resultToEither . A.parse (whiteSpace *> many sexpParser)
   where
     resultToEither (Fail leftover _ctxs reason) =
         Left (reason, leftover)
@@ -56,8 +56,8 @@ sexpParser =
            , atom <?> "atom"
            ]
   where
-    list = List <$> (char '(' *> many space *> many sexpParser <* char ')') <* many space
-    atom = Atom . unescape <$> (choice [string, anything]) <* many space
+    list = List <$> (char '(' *> whiteSpace *> many sexpParser <* char ')') <* whiteSpace
+    atom = Atom . unescape <$> (choice [string, anything]) <* whiteSpace
     string = fromStrict <$> (char '"' *> AC.scan False escapedStringScanner <* char '"')
     anything = fromStrict <$> AC.takeWhile1 (notInClass " \t\n()")
 
@@ -67,3 +67,12 @@ sexpParser =
     escapedStringScanner False '\\' = Just True
     escapedStringScanner False '"'  = Nothing
     escapedStringScanner False _    = Just False
+
+-- | A parser for conventional ASCII whitespace and ";" line comments.
+whiteSpace :: Parser ()
+whiteSpace = do
+    _ <- many space
+    _ <- many comment
+    return ()
+  where
+    comment = char ';' >> many (AC.notChar '\n') >> many space

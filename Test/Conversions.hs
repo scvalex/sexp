@@ -49,6 +49,7 @@ positiveSexps =
                                                    , Atom "b"
                                                    , Atom "c" ]
                                              , List [Atom "d"]])
+    , ("comments", "(a) ;; this is a", [List [Atom "a"]])
     ]
 
 basicTypeTests :: [Test]
