@@ -155,5 +155,5 @@ idTests =
     , testProperty "idDouble" (\x -> Just (x :: Double) == fromSexp (toSexp x))
     , testProperty "idString" (\x -> Just (x :: String) == (unpack <$> fromSexp (toSexp (pack x))))
     , testProperty "stringEscape" (\x -> x == unpack (unescape (escape (pack x))))
-    , testProperty "sexpPrintParse" (\x -> [x] == parseExn (printMach x))
+    -- , testProperty "sexpPrintParse" (\x -> [x] == parseExn (printMach x))
     ]
