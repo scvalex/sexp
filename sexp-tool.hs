@@ -3,8 +3,11 @@
 module Main where
 
 import Data.ByteString.Lazy.Char8 as BS
+import Data.Version ( showVersion )
 import Language.Sexp ( parseExn, printHum )
+import Paths_sexp ( version )
 import System.Console.CmdArgs
+import Text.Printf ( printf )
 
 data Modes = Print { files :: [FilePath] }
            deriving ( Show, Data, Typeable )
@@ -15,7 +18,7 @@ sexpModes =
              &= help "pretty-print S-expressions from files or stdin"
     ]
     &= program "sexp"
-    &= summary "sexp v0.5 - S-Expression magic"
+    &= summary (printf "sexp v%s - S-Expression magic" (showVersion version))
 
 readPrintSexp :: FilePath -> IO ()
 readPrintSexp fp = mapM_ (BS.putStrLn . printHum) . parseExn =<< BS.readFile fp
