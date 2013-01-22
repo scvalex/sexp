@@ -63,7 +63,7 @@ sexpParser =
 
     -- Scan an escaped string.
     escapedStringScanner :: Bool -> Char -> Maybe Bool
-    escapedStringScanner True _     = Just False
+    escapedStringScanner True  _    = Just False
     escapedStringScanner False '\\' = Just True
     escapedStringScanner False '"'  = Nothing
     escapedStringScanner False _    = Just False
