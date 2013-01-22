@@ -27,7 +27,7 @@ test: build
 	cabal-dev test
 
 p:
-	permamake.sh $(shell find Language/ -name '*.hs') $(shell find Test/ -name '*.hs') $(shell find Data/ -name '*.hs') *.cabal Makefile
+	permamake.sh $(shell find Language/ -name '*.hs') $(shell find Test/ -name '*.hs') $(shell find Data/ -name '*.hs') sexp-tool.hs *.cabal Makefile
 
 ghci: build
 	cabal-dev ghci

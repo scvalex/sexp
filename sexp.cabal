@@ -28,6 +28,13 @@ Library
   Exposed-modules:      Data.Sexp, Language.Sexp, Language.Sexp.Parser,
                         Language.Sexp.Printer
 
+Executable sexp
+  Build-depends:        base >= 4 && < 5, attoparsec, bytestring, cmdargs,
+                        mtl, syb
+  Ghc-options:          -Wall
+  Extensions:           ScopedTypeVariables
+  Main-is:              sexp-tool.hs
+
 Test-suite conversions
   Hs-Source-Dirs:       Test, .
   Main-Is:              Conversions.hs
