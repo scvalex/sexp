@@ -14,7 +14,7 @@ import qualified Data.Attoparsec.ByteString.Char8 as AC
 import Data.Attoparsec.Combinator ( choice )
 import qualified Data.Attoparsec.ByteString.Lazy as A
 import Data.ByteString.Lazy as BS
-import Data.Sexp ( Sexp(..) )
+import Data.Sexp ( Sexp(..), unescape )
 import Data.Typeable ( Typeable )
 
 data ParseException = ParseException String ByteString
@@ -57,7 +57,7 @@ sexpParser =
            ]
   where
     list = List <$> (char '(' *> many space *> many sexpParser <* char ')') <* many space
-    atom = Atom <$> (choice [string, anything]) <* many space
+    atom = Atom . unescape <$> (choice [string, anything]) <* many space
     string = fromStrict <$> (char '"' *> AC.scan False escapedStringScanner <* char '"')
     anything = fromStrict <$> AC.takeWhile1 (notInClass " \t\n()")
 
