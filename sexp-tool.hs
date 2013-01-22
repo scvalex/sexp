@@ -2,9 +2,9 @@
 
 module Main where
 
-import Data.List ( intercalate )
+import Data.ByteString.Lazy.Char8 as BS
+import Language.Sexp ( parseExn, printHum )
 import System.Console.CmdArgs
-import Text.Printf ( printf )
 
 data Modes = Print { files :: [FilePath] }
            deriving ( Show, Data, Typeable )
@@ -17,9 +17,11 @@ sexpModes =
     &= program "sexp"
     &= summary "sexp v0.5 - S-Expression magic"
 
+readPrintSexp :: FilePath -> IO ()
+readPrintSexp fp = mapM_ (BS.putStrLn . printHum) . parseExn =<< BS.readFile fp
+
 main :: IO ()
 main = do
     opts <- cmdArgs $ modes sexpModes
     case opts of
-        Print fs ->
-            printf "Printing %s\n" (intercalate ", " fs)
+        Print fs -> mapM_ readPrintSexp fs
