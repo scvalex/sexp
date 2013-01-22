@@ -134,11 +134,17 @@ gTests = let config1 = TcpConfig True "www.google.com" (Fallback 443 (Fallback 8
 -- QuickCheck Properties
 --------------------------------
 
+newtype ReadableString = RS { unRS :: String }
+
+instance Arbitrary ReadableString where
+    arbitrary = sized $ \n -> do
+        RS <$> sequence [ choose (' ', '~') | _ <- [1..n] ]
+
 instance Arbitrary Sexp where
     arbitrary = do
         n <- choose (1, 2) :: Gen Int
         case n of
-            1 -> (Atom . pack) <$> arbitrary
+            1 -> (Atom . pack . unRS) <$> arbitrary
             2 -> List <$> arbitrary
             _ -> fail "can't touch this"
 
