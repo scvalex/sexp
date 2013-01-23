@@ -12,7 +12,7 @@ import Data.Sexp ( Sexp(..), escape )
 -- machine processing.
 printMach :: Sexp -> ByteString
 printMach (Atom s)  = let es = escape s
-                      in if BS.find isSpace es /= Nothing
+                      in if BS.find isSpace es /= Nothing || '\\' `BS.elem` es
                          then BS.snoc (BS.cons '\"' es) '\"'
                          else es
 printMach (List xs) = BS.concat ["(", BS.intercalate " " (map printMach xs), ")"]
