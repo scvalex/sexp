@@ -15,7 +15,7 @@ data Modes = Print { files :: [FilePath], twoPass :: Bool }
 sexpModes :: [Modes]
 sexpModes =
     [ Print { files = def &= typFile &= args
-            , twoPass = def &= typ "BOOL"
+            , twoPass = def &= typ "BOOL" &= help "re-parse printed S-expressions as a sanity check"
             } &= help "pretty-print S-expressions from files or stdin"
     ]
     &= program "sexp"
