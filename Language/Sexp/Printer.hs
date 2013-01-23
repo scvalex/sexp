@@ -17,7 +17,7 @@ printMach (Atom s)  = let es = escape s
   where
     shouldQuote es = BS.find (\c -> (c < 'A' || 'z' < c)
                                     && (c < '0' || '9' < c)
-                                    && not (c `elem` "-_")) es /= Nothing
+                                    && not (c `elem` "-_+<>='/*")) es /= Nothing
 printMach (List xs) = BS.concat ["(", BS.intercalate " " (map printMach xs), ")"]
 
 -- | Pretty print a 'Sexp' in a human-friendly way.
