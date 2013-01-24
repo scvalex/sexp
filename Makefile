@@ -10,7 +10,7 @@ dist:
 	cabal-dev sdist
 
 install: build
-	cabal-dev install
+	cabal install
 
 clean:
 	cabal-dev clean
