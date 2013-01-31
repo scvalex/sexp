@@ -20,9 +20,10 @@ printMach (Atom s)  = let es = escape s
                          then BS.snoc (BS.cons '\"' es) '\"'
                          else es
   where
-    shouldQuote es = BS.find (\c -> (c < 'A' || 'z' < c)
-                                    && (c < '0' || '9' < c)
-                                    && not (c `elem` "-_+~<>='/*")) es /= Nothing
+    shouldQuote es = BS.null es
+                     || BS.find (\c -> (c < 'A' || 'z' < c)
+                                       && (c < '0' || '9' < c)
+                                       && not (c `elem` "-_+~<>='/*")) es /= Nothing
 printMach (List xs) = makeList (map printMach xs)
 
 -- | Turn @["a", "(b)", "c"]@ into @(a (b) c)@.
