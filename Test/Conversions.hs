@@ -142,11 +142,11 @@ instance Arbitrary ReadableString where
         RS <$> sequence [ choose (' ', '~') | _ <- [1..n] ]
 
 instance Arbitrary Sexp where
-    arbitrary = do
+    arbitrary = sized $ \sz -> do
         n <- choose (1, 2) :: Gen Int
         case n of
             1 -> (Atom . pack . unRS) <$> arbitrary
-            2 -> List <$> arbitrary
+            2 -> List <$> (resize (sz `div` 2) arbitrary)
             _ -> fail "can't touch this"
 
 idTests :: [Test]
@@ -156,5 +156,5 @@ idTests =
     , testProperty "idDouble" (\x -> Just (x :: Double) == fromSexp (toSexp x))
     , testProperty "idString" (\x -> Just (x :: String) == (unpack <$> fromSexp (toSexp (pack x))))
     , testProperty "stringEscape" (\x -> x == unpack (unescape (escape (pack x))))
-    -- , testProperty "sexpPrintParse" (\x -> [x] == parseExn (printMach x))
+    , testProperty "sexpPrintParse" (\x -> [x] == parseExn (printMach x))
     ]
