@@ -2,7 +2,7 @@
 
 module Language.Sexp.Parser (
         Sexp(..), sexpParser,
-        ParseException(..), parse, parseExn
+        ParseException(..), parse, parseExn, parseMaybe
     ) where
 
 import Control.Applicative ( (<$>), (<*), (*>), many )
@@ -34,6 +34,13 @@ parse = resultToEither . A.parse (whiteSpace *> many sexpParser)
         if BS.null leftover
         then Right sexps
         else Left ("garbage at end", leftover)
+
+-- | A variant of 'parse' that returns 'Nothing' if the parse fails.
+parseMaybe :: ByteString -> Maybe [Sexp]
+parseMaybe s =
+    case parse s of
+        Left _      -> Nothing
+        Right sexps -> Just sexps
 
 -- | A variant of 'parse' that throws a 'ParseException' if the parse
 -- fails.
