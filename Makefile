@@ -10,7 +10,7 @@ dist:
 	cabal-dev sdist
 
 install: build
-	cabal install
+	cabal install --force-reinstalls
 
 clean:
 	cabal-dev clean
