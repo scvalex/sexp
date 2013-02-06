@@ -1,5 +1,21 @@
 {-# LANGUAGE OverloadedStrings, DefaultSignatures #-}
 
+-- | S-Expressions are represented by 'Sexp'.  Conversions of
+-- arbitrary types to and from 'Sexp' are done via the 'Sexpable' type
+-- class.
+--
+-- The default implementation of Sexpable's 'toSexp' and 'fromSexp'
+-- require the type to have a 'Data' instance.  In other words, if a
+-- type is representable (which most types are), it is also
+-- 'Sexpable'.
+--
+-- @
+-- data MyType = Foo { unFoo :: Int }
+--             deriving ( Data, Show, Typeable )
+--
+-- instance Sexpable MyType
+-- @
+--
 module Data.Sexp (
         Sexp(..), Sexpable(..),
         escape, unescape
