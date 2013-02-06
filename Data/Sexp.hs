@@ -17,7 +17,10 @@
 -- @
 --
 module Data.Sexp (
+        -- * S-Expressions
         Sexp(..), Sexpable(..),
+
+        -- * Helpers
         escape, unescape
     ) where
 
@@ -51,8 +54,9 @@ instance Sexpable ByteString
 
 instance Sexpable Bool
 
--- | A 'ByteString'-based S-Expression.  You can a lazy 'ByteString'
--- with 'parse'.
+-- | A 'ByteString'-based S-Expression.  Conceptually, a 'Sexp' is
+-- either an single atom represented by a 'ByteString', or a list of
+-- 'Sexp'.
 data Sexp = List [Sexp] | Atom ByteString
           deriving ( Eq, Show )
 
