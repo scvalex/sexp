@@ -25,7 +25,8 @@ module Data.Sexp (
     ) where
 
 import Control.Applicative
-import Data.ByteString.Lazy.Char8 as BS hiding ( dropWhile, map, null, zipWith, length, elem )
+import Data.ByteString.Lazy.Char8 as BL hiding ( dropWhile, map, null, zipWith, length, elem )
+import qualified Data.ByteString as BS
 import Data.Data
 import Data.Generics
 import Control.Monad.State ( get, put, execState, modify,
@@ -52,6 +53,8 @@ instance Sexpable Double
 
 instance Sexpable ByteString
 
+instance Sexpable BS.ByteString
+
 instance Sexpable Bool
 
 -- | A 'ByteString'-based S-Expression.  Conceptually, a 'Sexp' is
@@ -66,6 +69,7 @@ data Sexp = List [Sexp] | Atom ByteString
 toSexpDefault :: (Data a) => a -> Sexp
 toSexpDefault = genericToSexp
          `extQ` byteStringToSexp
+         `extQ` strictByteStringToSexp
          `ext1Q` listToSexp
 
 -- | Convert something with a *real* 'Data' instance to a 'Sexp'.
@@ -94,6 +98,11 @@ genericToSexp x =
 byteStringToSexp :: ByteString -> Sexp
 byteStringToSexp = Atom
 
+-- | Convert a strict 'ByteString' to a 'Sexp' by wrapping it in an
+-- 'Atom'.
+strictByteStringToSexp :: BS.ByteString -> Sexp
+strictByteStringToSexp = Atom . BL.fromChunks . (:[])
+
 -- | Convert a list to a 'Sexp' by converting the elements, and
 -- wrapping them in a 'List'.
 listToSexp :: (Data a) => [a] -> Sexp
@@ -102,6 +111,7 @@ listToSexp xs = List (map toSexpDefault xs)
 fromSexpDefault :: (Data a, Monad m, Applicative m) => Sexp -> m a
 fromSexpDefault s = genericFromSexp s
              `extR` byteStringFromSexp s
+             `extR` strictByteStringFromSexp s
              `extR` unitFromSexp s
              `ext1R` listFromSexp s
              `ext2R` tuple2FromSexp s
@@ -180,6 +190,10 @@ byteStringFromSexp :: (Monad m) => Sexp -> m ByteString
 byteStringFromSexp (Atom bs) = return bs
 byteStringFromSexp _         = fail "invalid ByteString sexp"
 
+strictByteStringFromSexp :: (Monad m) => Sexp -> m BS.ByteString
+strictByteStringFromSexp (Atom bs) = return (BS.concat (BL.toChunks bs))
+strictByteStringFromSexp _         = fail "invalid ByteString sexp"
+
 unitFromSexp :: (Monad m) => Sexp -> m ()
 unitFromSexp (List []) = return ()
 unitFromSexp _         = fail "invalid unit sexp"
@@ -195,15 +209,15 @@ tuple2FromSexp _               = fail "invalid tuple2 sexp"
 -- | Escape @"@ and @\@ in the given string.  This needs to be done
 -- for double-quoted atoms (e.g. @"\"Hello\", he said"@).
 escape :: ByteString -> ByteString
-escape = BS.concatMap escapeChar
+escape = BL.concatMap escapeChar
   where
     escapeChar '\\' = "\\\\"
     escapeChar '"'  = "\\\""
-    escapeChar c    = BS.singleton c
+    escapeChar c    = BL.singleton c
 
 -- | The inverse of 'escape'.
 unescape :: ByteString -> ByteString
-unescape = BS.reverse . pack . snd . (BS.foldl' unescapeChar (False, []))
+unescape = BL.reverse . pack . snd . (BL.foldl' unescapeChar (False, []))
   where
     unescapeChar :: (Bool, [Char]) -> Char -> (Bool, [Char])
     unescapeChar (False, cs) '\\' = (True, cs)
