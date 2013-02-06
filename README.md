@@ -14,6 +14,8 @@ that work on all data-types that have `Typeable` and `Data` instances.
 
     λ > data MyType = Foo { unFoo :: Int } deriving ( Data, Show, Typeable )
 
+    λ > instance Sexpable MyType
+
     λ > toSexp (Foo 23)
     List [Atom "Foo",List [Atom "unFoo",Atom "23"]]
 
