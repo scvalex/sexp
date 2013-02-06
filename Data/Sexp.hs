@@ -1,7 +1,7 @@
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE OverloadedStrings, DefaultSignatures #-}
 
 module Data.Sexp (
-        Sexp(..), toSexp, fromSexp,
+        Sexp(..), Sexpable(..),
         escape, unescape
     ) where
 
@@ -13,6 +13,28 @@ import Control.Monad.State ( get, put, execState, modify,
                              lift, StateT(..), evalStateT )
 import Text.Printf ( printf )
 
+-- | Type class for things that can be converted to and from
+-- S-Expressions.
+class Sexpable a where
+    toSexp :: a -> Sexp
+    fromSexp :: (Monad m, Applicative m) => Sexp -> m a
+
+    default toSexp :: (Data a) => a -> Sexp
+    toSexp = toSexpDefault
+
+    default fromSexp :: (Data a, Monad m, Applicative m) => Sexp -> m a
+    fromSexp = fromSexpDefault
+
+instance Sexpable Int
+
+instance Sexpable Integer
+
+instance Sexpable Double
+
+instance Sexpable ByteString
+
+instance Sexpable Bool
+
 -- | A 'ByteString'-based S-Expression.  You can a lazy 'ByteString'
 -- with 'parse'.
 data Sexp = List [Sexp] | Atom ByteString
@@ -21,8 +43,8 @@ data Sexp = List [Sexp] | Atom ByteString
 -- | Convert an arbitrary value (of a type with a 'Data' instance) to
 -- a 'Sexp'.  This has special cases for types with fake 'Data'
 -- instances like 'ByteString'.
-toSexp :: (Data a) => a -> Sexp
-toSexp = genericToSexp
+toSexpDefault :: (Data a) => a -> Sexp
+toSexpDefault = genericToSexp
          `extQ` byteStringToSexp
          `ext1Q` listToSexp
 
@@ -37,10 +59,10 @@ genericToSexp x =
   where
     c = toConstr x
     fields = let labels = constrFields c
-                 values = gmapQ toSexp x
+                 values = gmapQ toSexpDefault x
              in if null labels
                 then values
-                else zipWith fieldToSexp labels (gmapQ toSexp x)
+                else zipWith fieldToSexp labels (gmapQ toSexpDefault x)
     constrSexp =
         if isTupleConstr c
         then List fields
@@ -55,10 +77,10 @@ byteStringToSexp = Atom
 -- | Convert a list to a 'Sexp' by converting the elements, and
 -- wrapping them in a 'List'.
 listToSexp :: (Data a) => [a] -> Sexp
-listToSexp xs = List (map toSexp xs)
+listToSexp xs = List (map toSexpDefault xs)
 
-fromSexp :: (Data a, Monad m, Applicative m) => Sexp -> m a
-fromSexp s = genericFromSexp s
+fromSexpDefault :: (Data a, Monad m, Applicative m) => Sexp -> m a
+fromSexpDefault s = genericFromSexp s
              `extR` byteStringFromSexp s
              `extR` unitFromSexp s
              `ext1R` listFromSexp s
@@ -125,7 +147,7 @@ genericFromSexp (List ((Atom constrName) : fields)) = ma
                 []        -> fail "ran out of constructor arguments"
                 (f : fs') -> do
                     put fs'
-                    lift $ fromSexp f
+                    lift $ fromSexpDefault f
 
     -- Count the number of arguments of a constructor.  We can't use
     -- 'constrFields' because that only includes labeled arguments.
@@ -143,11 +165,11 @@ unitFromSexp (List []) = return ()
 unitFromSexp _         = fail "invalid unit sexp"
 
 listFromSexp :: (Data a, Applicative m, Monad m) => Sexp -> m [a]
-listFromSexp (List xs) = mapM fromSexp xs
+listFromSexp (List xs) = mapM fromSexpDefault xs
 listFromSexp _         = fail "invalid list sexp"
 
 tuple2FromSexp :: (Data a, Data b, Applicative m, Monad m) => Sexp -> m (a, b)
-tuple2FromSexp (List [x1, x2]) = (,) <$> fromSexp x1 <*> fromSexp x2
+tuple2FromSexp (List [x1, x2]) = (,) <$> fromSexpDefault x1 <*> fromSexpDefault x2
 tuple2FromSexp _               = fail "invalid tuple2 sexp"
 
 -- | Escape @"@ and @\@ in the given string.  This needs to be done
