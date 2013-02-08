@@ -68,6 +68,8 @@ data Sexp = List [Sexp] | Atom ByteString
 -- instances like 'ByteString'.
 toSexpDefault :: (Data a) => a -> Sexp
 toSexpDefault = genericToSexp
+         -- FIXME make tosexp open to extension
+         -- `extQ` sexpableToSexp
          `extQ` byteStringToSexp
          `extQ` strictByteStringToSexp
          `ext1Q` listToSexp
@@ -93,6 +95,9 @@ genericToSexp x =
         else List (Atom (pack (showConstr c))
                    : if null fields then [] else fields)
     fieldToSexp name field  = List [Atom (pack name), field]
+
+sexpableToSexp :: (Sexpable a) => a -> Sexp
+sexpableToSexp = toSexp
 
 -- | Convert a 'ByteString' to a 'Sexp' by wrapping it in an 'Atom'.
 byteStringToSexp :: ByteString -> Sexp
