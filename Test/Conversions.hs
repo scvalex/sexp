@@ -78,8 +78,6 @@ data Config = TcpConfig { useSSL :: Bool
             | EmptyConfig
             deriving ( Data, Eq, Show, Typeable )
 
-instance Sexpable Config
-
 -- FIXME Test encoding/decoding of this.
 -- data EmptyConfig
 
