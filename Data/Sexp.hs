@@ -48,6 +48,20 @@ toSexp = genericToSexp
          `extQ` strictByteStringToSexp
          `ext1Q` listToSexp
 
+-- | Convert a 'Sexp' into an arbitrary value (which has a 'Data' instance).  This has
+-- secial cases for types with fake 'Data' instances like 'ByteString'.
+fromSexp :: (Data a, Monad m, Applicative m) => Sexp -> m a
+fromSexp s = genericFromSexp s
+             `extR` byteStringFromSexp s
+             `extR` strictByteStringFromSexp s
+             `extR` unitFromSexp s
+             `ext1R` listFromSexp s
+             `ext2R` tuple2FromSexp s
+
+----------------------
+-- SYB-based generic encoding/decoding
+----------------------
+
 -- | Convert something with a *real* 'Data' instance to a 'Sexp'.
 -- This works on algebraic data-types, primitives, but not on things
 -- like 'ByteString'.
@@ -83,14 +97,6 @@ strictByteStringToSexp = Atom . BL.fromChunks . (:[])
 -- wrapping them in a 'List'.
 listToSexp :: (Data a) => [a] -> Sexp
 listToSexp xs = List (map toSexp xs)
-
-fromSexp :: (Data a, Monad m, Applicative m) => Sexp -> m a
-fromSexp s = genericFromSexp s
-             `extR` byteStringFromSexp s
-             `extR` strictByteStringFromSexp s
-             `extR` unitFromSexp s
-             `ext1R` listFromSexp s
-             `ext2R` tuple2FromSexp s
 
 genericFromSexp :: forall a m. (Data a, Monad m, Applicative m) => Sexp -> m a
 genericFromSexp (Atom s) = ma
@@ -181,6 +187,10 @@ listFromSexp _         = fail "invalid list sexp"
 tuple2FromSexp :: (Data a, Data b, Applicative m, Monad m) => Sexp -> m (a, b)
 tuple2FromSexp (List [x1, x2]) = (,) <$> fromSexp x1 <*> fromSexp x2
 tuple2FromSexp _               = fail "invalid tuple2 sexp"
+
+----------------------
+-- Helpers
+----------------------
 
 -- | Escape @"@ and @\@ in the given string.  This needs to be done
 -- for double-quoted atoms (e.g. @"\"Hello\", he said"@).
