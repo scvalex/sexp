@@ -309,10 +309,6 @@ instance GSexpable U1 where
     gFromSexp (List []) = return U1
     gFromSexp _         = fail "expecting empty constructor"
 
-instance (ConsSexpable a) => GSexpable (C1 c a) where
-    gToSexp = consToSexp . unM1
-    gFromSexp s = M1 <$> consFromSexp s
-
 instance ( GProductToSexp a, GProductToSexp b
          , GFromProduct a, GFromProduct b
          , ProductSize a, ProductSize b ) => GSexpable (a :*: b) where
