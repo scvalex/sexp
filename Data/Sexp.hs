@@ -3,20 +3,42 @@
 {-# LANGUAGE FunctionalDependencies, EmptyDataDecls, UndecidableInstances #-}
 {-# LANGUAGE OverlappingInstances #-}
 
--- | S-Expressions are represented by 'Sexp'.  Conversions of arbitrary types with 'Data'
--- instances are done through 'toSexp' and 'fromSexp'.
+-- | S-Expressions are represented by 'Sexp'.  Conversion to and from arbitrary types is
+-- done through 'Sexpable'.
 --
--- In other words, in order for 'toSexp' and 'fromSexp' to work, the type must have a
--- 'Data' instance.  This can easily be done with the @DeriveDataTypeable@ extension.n
+-- The encoding and decoding functions from 'Sexpable', 'toSexp', and 'fromSexp' all have
+-- 'Generic' default implementations.  So, if your data-type has a 'Generic' instance
+-- (which you can automatically get with the @DeriveGeneric@ GHC extension), it also has a
+-- 'Sexpable' instance:
 --
 -- @
--- {-# LANGUAGE DeriveDataTypeable #-}
+-- {-# LANGUAGE DeriveGeneric #-}
 --
 -- data MyType = Foo { unFoo :: Int }
---             deriving ( Data, Show, Typeable )
+--             deriving ( Generic )
+--
+-- instance Sexpable MyType
+--   -- the default implementation uses the 'Generic' representation of 'MyType'
 -- @
 --
--- Thank you @aeson@, for the model code for this module.
+-- If you want a specific encoding for your type, just fill in the 'Sexpable' instance
+-- methods:
+--
+-- @
+-- {-# LANGUAGE OverloadedStrings #-}
+--
+-- import Control.Applicative ( (<$>) )
+--
+-- data MyType = Foo { unFoo :: Int }
+--
+-- instance Sexpable MyType where
+--     toSexp (Foo x) = List [Atom "this", Atom "is", toSexp x]
+--
+--     fromSexp (List [Atom "this", Atom "is", s]) = Foo <$> fromSexp s
+--     fromSexp _                                  = fail "invalid MyType sexp"
+-- @
+--
+-- Thank you, @aeson@, for the model code for this module.
 module Data.Sexp (
         -- * S-Expressions
         Sexp(..), Sexpable(..),
