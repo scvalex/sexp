@@ -103,6 +103,14 @@ instance (Sexpable a, Sexpable b, Sexpable c, Sexpable d) => Sexpable (a, b, c, 
     fromSexp _ =
         fail "expecting 4-tuple"
 
+instance (Sexpable a, Sexpable b, Sexpable c, Sexpable d, Sexpable e)
+         => Sexpable (a, b, c, d, e) where
+    toSexp (x, y, z, u, v) = List [toSexp x, toSexp y, toSexp z, toSexp u, toSexp v]
+    fromSexp (List [sx, sy, sz, su, sv]) =
+        (,,,,) <$> fromSexp sx <*> fromSexp sy <*> fromSexp sz <*> fromSexp su <*> fromSexp sv
+    fromSexp _ =
+        fail "expecting 5-tuple"
+
 ----------------------
 -- What is a record?
 ----------------------
