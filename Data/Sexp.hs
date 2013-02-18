@@ -81,6 +81,10 @@ class Sexpable a where
     default fromSexp :: (Generic a, GSexpable (Rep a), Monad m, Applicative m) => Sexp -> m a
     fromSexp s = to <$> gFromSexp s
 
+----------------------
+-- Particular Sexpable instances
+----------------------
+
 instance Sexpable Bool where
     toSexp = showToSexp
     fromSexp = readFromSexp
@@ -106,6 +110,11 @@ instance Sexpable ByteString where
     toSexp = Atom
     fromSexp (Atom s) = return s
     fromSexp _        = fail "expecting bytestring atom"
+
+instance Sexpable String where
+    toSexp = Atom . BL.pack
+    fromSexp (Atom s) = return (BL.unpack s)
+    fromSexp _        = fail "expecting string atom"
 
 instance (Sexpable a) => Sexpable [a] where
     toSexp xs = List (map toSexp xs)

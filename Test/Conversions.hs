@@ -50,13 +50,19 @@ positiveSexps =
 
 basicTypeTests :: [Test]
 basicTypeTests =
-    [ testCase "int" (assertEqual "" (Just (42 :: Int)) (fromSexp ("42")))
-    , testCase "integer" (assertEqual "" (Just (42 :: Integer)) (fromSexp ("42")))
-    , testCase "double" (assertEqual "" (Just (42.2 :: Double)) (fromSexp ("42.2")))
-    , testCase "string" (assertEqual "" (Just ("ana" :: ByteString)) (fromSexp ("ana")))
-    , testCase "boolFalse" (assertEqual "" ("False") (toSexp False))
-    , testCase "boolTrue" (assertEqual "" ("True") (toSexp True))
-    ]
+    concat [ typeTest "int" (42 :: Int) "42"
+           , typeTest "integer" (42 :: Integer) "42"
+           , typeTest "double" (42.2 :: Double) "42.2"
+           , typeTest "bytestring" ("ana" :: ByteString) "ana"
+           , typeTest "string" ("ana" :: String) "ana"
+           , typeTest "boolFalse" False "False"
+           , typeTest "boolTrue" True "True"
+           ]
+  where
+    typeTest :: (Sexpable a, Show a, Eq a) => String -> a -> Sexp -> [Test]
+    typeTest name x s =
+        [ testCase (name ++ "To") (assertEqual "" s (toSexp x))
+        , testCase (name ++ "From") (assertEqual "" (Just x) (fromSexp s)) ]
 
 data Fallback a = None | Fallback a (Fallback a)
                 deriving ( Eq, Generic, Show )
