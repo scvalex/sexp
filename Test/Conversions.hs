@@ -38,28 +38,24 @@ positiveSexps =
     , ("empty-lists", "() ()", [List [], List []])
     , ("nested-lists", "(() ())", [List [List [], List []]])
     , ("list-whitespace", "  ( ( )( ) ) ", [List [List [], List []]])
-    , ("atom", "a", [Atom "a"])
-    , ("singleton", "(ab)", [List [Atom "ab"]])
-    , ("atom-list", "(a b c)", [List [Atom "a", Atom "b", Atom "c"]])
-    , ("nested-atom-lists", "(a ((b c) (d)))", [List [ Atom "a"
-                                                     , List [ List [ Atom "b"
-                                                                   , Atom "c"]
-                                                            , List [Atom "d"]] ] ])
-    , ("atom-whitespace", "( a b  c ) (d)", [List [ Atom "a"
-                                                   , Atom "b"
-                                                   , Atom "c" ]
-                                             , List [Atom "d"]])
-    , ("comments", "(a) ;; this is a", [List [Atom "a"]])
+    , ("atom", "a", ["a"])
+    , ("singleton", "(ab)", [List ["ab"]])
+    , ("atom-list", "(a b c)", [List ["a", "b", "c"]])
+    , ("nested-atom-lists", "(a ((b c) (d)))", [List [ "a"
+                                                     , List [ List ["b", "c"]
+                                                            , List ["d"]] ] ])
+    , ("atom-whitespace", "( a b  c ) (d)", [List ["a", "b", "c"], List ["d"]])
+    , ("comments", "(a) ;; this is a", [List ["a"]])
     ]
 
 basicTypeTests :: [Test]
 basicTypeTests =
-    [ testCase "int" (assertEqual "" (Just (42 :: Int)) (fromSexp (Atom "42")))
-    , testCase "integer" (assertEqual "" (Just (42 :: Integer)) (fromSexp (Atom "42")))
-    , testCase "double" (assertEqual "" (Just (42.2 :: Double)) (fromSexp (Atom "42.2")))
-    , testCase "string" (assertEqual "" (Just ("ana" :: ByteString)) (fromSexp (Atom "ana")))
-    , testCase "boolFalse" (assertEqual "" (Atom "False") (toSexp False))
-    , testCase "boolTrue" (assertEqual "" (Atom "True") (toSexp True))
+    [ testCase "int" (assertEqual "" (Just (42 :: Int)) (fromSexp ("42")))
+    , testCase "integer" (assertEqual "" (Just (42 :: Integer)) (fromSexp ("42")))
+    , testCase "double" (assertEqual "" (Just (42.2 :: Double)) (fromSexp ("42.2")))
+    , testCase "string" (assertEqual "" (Just ("ana" :: ByteString)) (fromSexp ("ana")))
+    , testCase "boolFalse" (assertEqual "" ("False") (toSexp False))
+    , testCase "boolTrue" (assertEqual "" ("True") (toSexp True))
     ]
 
 data Fallback a = None | Fallback a (Fallback a)
@@ -111,32 +107,32 @@ gTests = let config1 = TcpConfig True "www.google.com" (Fallback 443 (Fallback 8
                        (fromSexp (toSexp config)))
 
     singleConfigTest =
-        testCase "singleConfig" (assertEqual "" (List [Atom "SingleConfig",
-                                                       List [Atom "getConfig", Atom "23"]])
+        testCase "singleConfig" (assertEqual "" (List [ "SingleConfig"
+                                                      , List ["getConfig", "23"]])
                                                 (toSexp (SingleConfig 23)))
 
     manualFallbackSexp None =
-        List [Atom "None" , List []]
+        List ["None" , List []]
     manualFallbackSexp (Fallback x fb) =
-        List [Atom "Fallback", List [toSexp x, manualFallbackSexp fb]]
+        List ["Fallback", List [toSexp x, manualFallbackSexp fb]]
 
-    manualSexp (TcpConfig s t p) = (List [ Atom "TcpConfig"
-                                         , List [ List [Atom "useSSL", manualBoolSexp s]
-                                                , List [Atom "target", toSexp t]
-                                                , List [Atom "port", manualFallbackSexp p] ] ])
+    manualSexp (TcpConfig s t p) = (List [ "TcpConfig"
+                                         , List [ List ["useSSL", manualBoolSexp s]
+                                                , List ["target", toSexp t]
+                                                , List ["port", manualFallbackSexp p] ] ])
     manualSexp (UdpConfig (t1, t2, t3, t4) ps fr) =
-        (List [ Atom "UdpConfig"
-              , List [ List [Atom "udpTarget", List [toSexp t1, toSexp t2, toSexp t3, toSexp t4]]
-                     , List [Atom "udpPorts", List (map toSexp ps)]
-                     , List [Atom "failureRate", toSexp fr] ] ])
-    manualSexp (ErlangConfig host cookie ()) = List [ Atom "ErlangConfig"
+        (List [ "UdpConfig"
+              , List [ List ["udpTarget", List [toSexp t1, toSexp t2, toSexp t3, toSexp t4]]
+                     , List ["udpPorts", List (map toSexp ps)]
+                     , List ["failureRate", toSexp fr] ] ])
+    manualSexp (ErlangConfig host cookie ()) = List ["ErlangConfig"
                                                     , List [ Atom host
                                                            , Atom cookie
                                                            , List [] ] ]
-    manualSexp EmptyConfig = List [ Atom "EmptyConfig", List [] ]
+    manualSexp EmptyConfig = List ["EmptyConfig", List []]
 
-    manualBoolSexp True = Atom "True"
-    manualBoolSexp False = Atom "False"
+    manualBoolSexp True = "True"
+    manualBoolSexp False = "False"
 
 --------------------------------
 -- QuickCheck Properties

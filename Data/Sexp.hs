@@ -68,8 +68,8 @@ import qualified Data.Vector.Mutable as VM
 data Sexp = List [Sexp] | Atom ByteString
           deriving ( Eq, Show )
 
--- instance IsString Sexp where
---     fromString = Atom . BL.pack
+instance IsString Sexp where
+    fromString = Atom . BL.pack
 
 class Sexpable a where
     toSexp :: a -> Sexp
