@@ -71,8 +71,7 @@ data Config = TcpConfig { useSSL :: Bool
                         , target :: ByteString
                         , port   :: Fallback Int
                         }
-            -- | UdpConfig { udpTarget   :: (Int, Int, Int, Int)
-            | UdpConfig { udpTarget   :: (Int, Int)
+            | UdpConfig { udpTarget   :: (Int, Int, Int, Int)
                         , udpPorts    :: [Integer]
                         , failureRate :: Double
                         }
@@ -87,9 +86,7 @@ instance Sexpable Config
 
 gTests :: [Test]
 gTests = let config1 = TcpConfig True "www.google.com" (Fallback 443 (Fallback 80 None))
-             -- FIXME Re-enable real UdpConfig, once we figure out how to handle N-tuples
-             -- config2 = UdpConfig (192, 168, 0, 1) [20, 21, 22] 0.12
-             config2 = UdpConfig (192, 168) [20, 21, 22] 0.12
+             config2 = UdpConfig (192, 168, 0, 1) [20, 21, 22] 0.12
              config3 = ErlangConfig "localhost" "chocolatechip" ()
              config4 = EmptyConfig
          in [ manualSexpTest "config1" config1
@@ -119,11 +116,9 @@ gTests = let config1 = TcpConfig True "www.google.com" (Fallback 443 (Fallback 8
                                          , List [ List [Atom "useSSL", manualBoolSexp s]
                                                 , List [Atom "target", toSexp t]
                                                 , List [Atom "port", manualFallbackSexp p] ] ])
-    -- manualSexp (UdpConfig (t1, t2, t3, t4) ps fr) =
-    manualSexp (UdpConfig (t1, t2) ps fr) =
+    manualSexp (UdpConfig (t1, t2, t3, t4) ps fr) =
         (List [ Atom "UdpConfig"
-              , List [ -- List [Atom "udpTarget", List [toSexp t1, toSexp t2, toSexp t3, toSexp t4]]
-                       List [Atom "udpTarget", List [toSexp t1, toSexp t2]]
+              , List [ List [Atom "udpTarget", List [toSexp t1, toSexp t2, toSexp t3, toSexp t4]]
                      , List [Atom "udpPorts", List (map toSexp ps)]
                      , List [Atom "failureRate", toSexp fr] ] ])
     manualSexp (ErlangConfig host cookie ()) = List [ Atom "ErlangConfig"
