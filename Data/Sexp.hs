@@ -94,6 +94,14 @@ instance Sexpable Char where
     fromSexp (Atom (BL.unpack -> [c])) = return c
     fromSexp _                         = fail "expecting char atom"
 
+instance Sexpable Double where
+    toSexp = showToSexp
+    fromSexp = readFromSexp
+
+instance Sexpable Float where
+    toSexp = showToSexp
+    fromSexp = readFromSexp
+
 instance Sexpable () where
     toSexp () = List []
     fromSexp (List []) = return ()
@@ -104,10 +112,6 @@ instance Sexpable Int where
     fromSexp = readFromSexp
 
 instance Sexpable Integer where
-    toSexp = showToSexp
-    fromSexp = readFromSexp
-
-instance Sexpable Double where
     toSexp = showToSexp
     fromSexp = readFromSexp
 
