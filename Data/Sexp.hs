@@ -178,9 +178,9 @@ instance (GFromRecord a, GFromRecord b) => GFromRecord (a :*: b) where
     gFromRecord fs = (:*:) <$> gFromRecord fs <*> gFromRecord fs
 
 instance (Selector s, GSexpable a) => GFromRecord (S1 s a) where
-    gFromRecord = maybe (fail (printf "field not found %s" key))
-                        gFromSexp
-                  . sLookup
+    gFromRecord s = maybe (fail (printf "field %s not found in %s" key (show s)))
+                          gFromSexp
+                          (sLookup s)
       where
         key = selName (undefined :: t s a p)
         keyS = Atom (BL.pack key)
@@ -315,6 +315,9 @@ instance GSexpable U1 where
 
 instance (Constructor c, ConsSexpable a) => GSexpable (C1 c a) where
     gToSexp x = List [Atom (BL.pack (conName (undefined :: t c a p))), consToSexp (unM1 x)]
+
+    gFromSexp (List [Atom ktr, fs])
+        | ktr == BL.pack (conName (undefined :: t c a p)) = M1 <$> consFromSexp fs
     gFromSexp s = M1 <$> consFromSexp s
 
 instance ( GProductToSexp a, GProductToSexp b
