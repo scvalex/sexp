@@ -5,7 +5,6 @@ module Main where
 
 import Control.Applicative ( (<$>) )
 import Data.ByteString.Lazy.Char8 hiding ( map, concat )
-import Data.Data ( Typeable, Data )
 import Data.Monoid
 import Data.Sexp
 import GHC.Generics ( Generic )
@@ -66,6 +65,8 @@ basicTypeTests =
 data Fallback a = None | Fallback a (Fallback a)
                 deriving ( Eq, Generic, Show )
 
+instance (Sexpable a) => Sexpable (Fallback a)
+
 data Config = TcpConfig { useSSL :: Bool
                         , target :: ByteString
                         , port   :: Fallback Int
@@ -78,6 +79,8 @@ data Config = TcpConfig { useSSL :: Bool
             | ErlangConfig ByteString ByteString ()
             | EmptyConfig
             deriving ( Eq, Generic, Show )
+
+instance Sexpable Config
 
 -- FIXME Test encoding/decoding of this.
 -- data EmptyConfig

@@ -1,6 +1,7 @@
 {-# LANGUAGE DefaultSignatures, FlexibleContexts, MultiParamTypeClasses #-}
 {-# LANGUAGE TypeSynonymInstances, FlexibleInstances, KindSignatures, TypeOperators #-}
 {-# LANGUAGE FunctionalDependencies, EmptyDataDecls, UndecidableInstances #-}
+{-# LANGUAGE OverlappingInstances #-}
 
 -- | S-Expressions are represented by 'Sexp'.  Conversions of arbitrary types with 'Data'
 -- instances are done through 'toSexp' and 'fromSexp'.
@@ -18,20 +19,24 @@
 -- Thank you @aeson@, for the model code for this module.
 module Data.Sexp (
         -- * S-Expressions
-        Sexp(..), toSexp, fromSexp,
+        Sexp(..), Sexpable(..),
 
         -- * Helpers
         escape, unescape
     ) where
 
-import Control.Applicative ( Applicative(..), (<$>) )
+import Control.Applicative ( Applicative(..), Alternative(..), (<$>) )
+import Control.Monad.ST ( ST )
+import Data.Bits ( shiftR )
 import Data.ByteString.Lazy.Char8 ( ByteString )
 import Data.DList ( DList )
 import Data.Monoid ( Monoid(..) )
+import Data.Vector ( Vector )
 import GHC.Generics
 import Text.Printf ( printf )
 import qualified Data.ByteString.Lazy.Char8 as BL
 import qualified Data.DList as DL
+import qualified Data.Vector as V
 import qualified Data.Vector.Mutable as VM
 
 -- | A 'ByteString'-based S-Expression.  Conceptually, a 'Sexp' is
@@ -49,6 +54,40 @@ class Sexpable a where
 
     default fromSexp :: (Generic a, GSexpable (Rep a), Monad m, Applicative m) => Sexp -> m a
     fromSexp s = to <$> gFromSexp s
+
+instance Sexpable Bool
+
+instance Sexpable () where
+    toSexp () = List []
+    fromSexp (List []) = return ()
+    fromSexp _         = fail "expecting unit"
+
+instance Sexpable Int where
+    toSexp = showToSexp
+    fromSexp = readFromSexp
+
+instance Sexpable Integer where
+    toSexp = showToSexp
+    fromSexp = readFromSexp
+
+instance Sexpable Double where
+    toSexp = showToSexp
+    fromSexp = readFromSexp
+
+instance Sexpable ByteString where
+    toSexp = Atom
+    fromSexp (Atom s) = return s
+    fromSexp _        = fail "expecting bytestring atom"
+
+instance (Sexpable a) => Sexpable [a] where
+    toSexp xs = List (map toSexp xs)
+    fromSexp (List ss) = mapM fromSexp ss
+    fromSexp _         = fail "expecting list"
+
+instance (Sexpable a, Sexpable b) => Sexpable (a, b) where
+    toSexp (x, y) = List [toSexp x, toSexp y]
+    fromSexp (List [sx, sy]) = (,) <$> fromSexp sx <*> fromSexp sy
+    fromSexp _               = fail "expecting 2-tuple"
 
 ----------------------
 -- What is a record?
@@ -147,6 +186,65 @@ instance ProductSize (S1 s a) where
     productSize = Tagged2 1
 
 ----------------------
+-- Product types
+----------------------
+
+class GFromProduct f where
+    gFromProduct :: (Monad m, Applicative m) => Vector Sexp -> Int -> Int -> m (f a)
+
+instance (GFromProduct a, GFromProduct b) => GFromProduct (a :*: b) where
+    gFromProduct arr ix len = (:*:) <$> gFromProduct arr ix lenL
+                                    <*> gFromProduct arr ixR lenR
+      where
+        lenL = len `shiftR` 1
+        ixR = ix + lenL
+        lenR = len - lenL
+
+instance (GSexpable a) => GFromProduct (S1 s a) where
+    gFromProduct arr ix _ = gFromSexp $ V.unsafeIndex arr ix
+
+class GProductToSexp f where
+    gProductToSexp :: VM.MVector s Sexp -> Int -> Int -> f a -> ST s ()
+
+instance (GProductToSexp a, GProductToSexp b) => GProductToSexp (a :*: b) where
+    gProductToSexp mv ix len (a :*: b) = do
+        gProductToSexp mv ix lenL a
+        gProductToSexp mv ixR lenR b
+      where
+        lenL = len `shiftR` 1
+        ixR = ix + lenL
+        lenR = len - lenL
+
+instance (GSexpable a) => GProductToSexp a where
+    gProductToSexp mv ix _ = VM.unsafeWrite mv ix . gToSexp
+
+----------------------
+-- Sum Types
+----------------------
+
+class GFromSum f where
+    gFromSum :: (Monad m, Applicative m) => Pair -> Maybe (m (f a))
+
+instance (GFromSum a, GFromSum b) => GFromSum (a :+: b) where
+    gFromSum keyVal = (fmap L1 <$> gFromSum keyVal) <|>
+                      (fmap R1 <$> gFromSum keyVal)
+
+instance (Constructor c, GSexpable a, ConsSexpable a) => GFromSum (C1 c a) where
+    gFromSum (key, value)
+        | key == BL.pack (conName (undefined :: t c a p)) = Just $ gFromSexp value
+        | otherwise = Nothing
+
+class GToSum f where
+    gToSum :: f a -> Sexp
+
+instance (GToSum a, GToSum b) => GToSum (a :+: b) where
+    gToSum (L1 x) = gToSum x
+    gToSum (R1 x) = gToSum x
+
+instance (Constructor c, GSexpable a, ConsSexpable a) => GToSum (C1 c a) where
+    gToSum x = List [Atom (BL.pack (conName (undefined :: t c a p))), gToSexp x]
+
+----------------------
 -- GHC.Generics-based generic encoding/decoding
 ----------------------
 
@@ -171,6 +269,37 @@ instance (ConsSexpable a) => GSexpable (C1 c a) where
     gToSexp = consToSexp . unM1
     gFromSexp s = M1 <$> consFromSexp s
 
+instance ( GProductToSexp a, GProductToSexp b
+         , GFromProduct a, GFromProduct b
+         , ProductSize a, ProductSize b ) => GSexpable (a :*: b) where
+    gToSexp p = List $ V.toList $ V.create $ do
+        mv <- VM.unsafeNew lenProduct
+        gProductToSexp mv 0 lenProduct p
+        return mv
+      where
+        lenProduct = unTagged2 (productSize :: Tagged2 (a :*: b) Int)
+
+    gFromSexp (List xs)
+        | lenList == lenProduct = gFromProduct (V.fromList xs) 0 lenProduct
+        | otherwise = fail "expecting a product type (list)"
+      where
+        lenList = length xs
+        lenProduct = unTagged2 (productSize :: Tagged2 (a :*: b) Int)
+    gFromSexp (Atom _) =
+        fail "expecting a product type (atom)"
+
+instance ( GToSum a, GToSum b
+         , GFromSum a, GFromSum b ) => GSexpable (a :+: b) where
+    gToSexp (L1 x) = gToSum x
+    gToSexp (R1 x) = gToSum x
+
+    gFromSexp (List [Atom key, val]) =
+        case gFromSum (key, val) of
+            Nothing -> fail (printf "field %s not found" (show key))
+            Just x  -> x
+    gFromSexp _ =
+        fail "expecting sum type"
+
 ----------------------
 -- Helpers
 ----------------------
@@ -191,3 +320,17 @@ unescape = BL.reverse . BL.pack . snd . (BL.foldl' unescapeChar (False, []))
     unescapeChar :: (Bool, [Char]) -> Char -> (Bool, [Char])
     unescapeChar (False, cs) '\\' = (True, cs)
     unescapeChar (_, cs) c        = (False, c : cs)
+
+-- | Convert something that has a 'Show' instance to an 'Atom' with its string
+-- representation.
+showToSexp :: (Show a) => a -> Sexp
+showToSexp = Atom . BL.pack . show
+
+-- | The inverse of 'showToSexp'.
+readFromSexp :: (Read a, Monad m, Applicative m) => Sexp -> m a
+readFromSexp (Atom s) =
+    case readsPrec 1 (BL.unpack s) of
+        [(n, _)] -> return n
+        _        -> fail "cannot read int"
+readFromSexp (List _) =
+    fail "expecting atom int"
