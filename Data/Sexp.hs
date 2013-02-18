@@ -102,11 +102,6 @@ instance Sexpable Float where
     toSexp = showToSexp
     fromSexp = readFromSexp
 
-instance Sexpable () where
-    toSexp () = List []
-    fromSexp (List []) = return ()
-    fromSexp _         = fail "expecting unit"
-
 instance Sexpable Int where
     toSexp = showToSexp
     fromSexp = readFromSexp
@@ -114,6 +109,11 @@ instance Sexpable Int where
 instance Sexpable Integer where
     toSexp = showToSexp
     fromSexp = readFromSexp
+
+instance Sexpable () where
+    toSexp () = List []
+    fromSexp (List []) = return ()
+    fromSexp _         = fail "expecting unit"
 
 instance Sexpable ByteString where
     toSexp = Atom

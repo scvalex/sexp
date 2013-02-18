@@ -53,10 +53,10 @@ basicTypeTests =
     concat [ typeTest "boolFalse" False "False"
            , typeTest "boolTrue" True "True"
            , typeTest "char" 'x' "x"
+           , typeTest "double" (42.2 :: Double) "42.2"
            , typeTest "float" (1.33 :: Float) "1.33"
            , typeTest "int" (42 :: Int) "42"
            , typeTest "integer" (42 :: Integer) "42"
-           , typeTest "double" (42.2 :: Double) "42.2"
            , typeTest "bytestring" ("ana" :: ByteString) "ana"
            , typeTest "string" ("ana" :: String) "ana"
            , typeTest "unit" () (List [])
