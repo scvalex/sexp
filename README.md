@@ -3,12 +3,18 @@ sexp
 
 > S-Expression parsing/printing made fun and easy
 
-What
-====
+Usage
+=====
 
 `sexp` provides an S-expression data-type, and printers and parsers
 that work on all data-types that have `Generic` instances (so,
-everything you're ever likely to define yourself):.
+everything you're ever likely to define yourself).
+
+In order to encode/decode a custom data-type with `sexp`, 1) you add a
+`Generic` instance to it, and 2) add an empty `Sexpable` instance for
+it.  The default implementation of `Sexpable`'s `toSexp` and
+`fromSexp` uses the `Generic` representation of the data-type to
+encode and decode it.
 
     % ghci
     GHCi, version 7.6.2: http://www.haskell.org/ghc/  :? for help
