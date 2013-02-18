@@ -55,7 +55,9 @@ class Sexpable a where
     default fromSexp :: (Generic a, GSexpable (Rep a), Monad m, Applicative m) => Sexp -> m a
     fromSexp s = to <$> gFromSexp s
 
-instance Sexpable Bool
+instance Sexpable Bool where
+    toSexp = showToSexp
+    fromSexp = readFromSexp
 
 instance Sexpable () where
     toSexp () = List []

@@ -58,8 +58,8 @@ basicTypeTests =
     , testCase "integer" (assertEqual "" (Just (42 :: Integer)) (fromSexp (Atom "42")))
     , testCase "double" (assertEqual "" (Just (42.2 :: Double)) (fromSexp (Atom "42.2")))
     , testCase "string" (assertEqual "" (Just ("ana" :: ByteString)) (fromSexp (Atom "ana")))
-    , testCase "boolFalse" (assertEqual "" (List [Atom "False"]) (toSexp False))
-    , testCase "boolTrue" (assertEqual "" (List [Atom "True"]) (toSexp True))
+    , testCase "boolFalse" (assertEqual "" (Atom "False") (toSexp False))
+    , testCase "boolTrue" (assertEqual "" (Atom "True") (toSexp True))
     ]
 
 data Fallback a = None | Fallback a (Fallback a)
