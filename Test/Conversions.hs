@@ -50,13 +50,14 @@ positiveSexps =
 
 basicTypeTests :: [Test]
 basicTypeTests =
-    concat [ typeTest "int" (42 :: Int) "42"
+    concat [ typeTest "boolFalse" False "False"
+           , typeTest "boolTrue" True "True"
+           , typeTest "char" 'x' "x"
+           , typeTest "int" (42 :: Int) "42"
            , typeTest "integer" (42 :: Integer) "42"
            , typeTest "double" (42.2 :: Double) "42.2"
            , typeTest "bytestring" ("ana" :: ByteString) "ana"
            , typeTest "string" ("ana" :: String) "ana"
-           , typeTest "boolFalse" False "False"
-           , typeTest "boolTrue" True "True"
            , typeTest "unit" () (List [])
            ]
   where

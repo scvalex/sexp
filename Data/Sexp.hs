@@ -1,7 +1,7 @@
 {-# LANGUAGE DefaultSignatures, FlexibleContexts, MultiParamTypeClasses #-}
 {-# LANGUAGE TypeSynonymInstances, FlexibleInstances, KindSignatures, TypeOperators #-}
 {-# LANGUAGE FunctionalDependencies, EmptyDataDecls, UndecidableInstances #-}
-{-# LANGUAGE OverlappingInstances #-}
+{-# LANGUAGE OverlappingInstances, ViewPatterns #-}
 
 -- | S-Expressions are represented by 'Sexp'.  Conversion to and from arbitrary types is
 -- done through 'Sexpable'.
@@ -88,6 +88,11 @@ class Sexpable a where
 instance Sexpable Bool where
     toSexp = showToSexp
     fromSexp = readFromSexp
+
+instance Sexpable Char where
+    toSexp c = toSexp [c]
+    fromSexp (Atom (BL.unpack -> [c])) = return c
+    fromSexp _                         = fail "expecting char atom"
 
 instance Sexpable () where
     toSexp () = List []
