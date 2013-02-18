@@ -10,20 +10,24 @@ What
 that work on all data-types that have `Typeable` and `Data` instances.
 
 
+    λ > :set -XDeriveGeneric
+
     λ > import Language.Sexp
 
-    λ > data MyType = Foo { unFoo :: Int } deriving ( Data, Show, Typeable )
+    λ > import GHC.Generics
+
+    λ > data MyType = Foo { unFoo :: Int } deriving ( Show, Generic )
 
     λ > instance Sexpable MyType
 
     λ > toSexp (Foo 23)
-    List [Atom "Foo",List [Atom "unFoo",Atom "23"]]
+    List [Atom "Foo",List [List [Atom "unFoo",Atom "23"]]]
 
     λ > printMach (toSexp (Foo 23))
-    "(Foo (unFoo 23))"
+    "(Foo ((unFoo 23)))"
 
     λ > parseExn (printMach (toSexp (Foo 23)))
-    [List [Atom "Foo",List [Atom "unFoo",Atom "23"]]]
+    [List [Atom "Foo",List [List [Atom "unFoo",Atom "23"]]]]
 
     λ > fromSexp (head (parseExn (printMach (toSexp (Foo 23))))) :: Maybe MyType
     Just (Foo {unFoo = 23})
