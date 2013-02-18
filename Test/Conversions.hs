@@ -111,29 +111,29 @@ gTests = let config1 = TcpConfig True "www.google.com" (Fallback 443 (Fallback 8
                        (fromSexp (toSexp config)))
 
     manualFallbackSexp None =
-        List [Atom "None"]
+        List [Atom "None" , List []]
     manualFallbackSexp (Fallback x fb) =
-        List [Atom "Fallback", toSexp x, manualFallbackSexp fb]
+        List [Atom "Fallback", List [toSexp x, manualFallbackSexp fb]]
 
     manualSexp (TcpConfig s t p) = (List [ Atom "TcpConfig"
-                                         , List [Atom "useSSL", manualBoolSexp s]
-                                         , List [Atom "target", toSexp t]
-                                         , List [Atom "port", manualFallbackSexp p] ])
+                                         , List [ List [Atom "useSSL", manualBoolSexp s]
+                                                , List [Atom "target", toSexp t]
+                                                , List [Atom "port", manualFallbackSexp p] ] ])
     -- manualSexp (UdpConfig (t1, t2, t3, t4) ps fr) =
     manualSexp (UdpConfig (t1, t2) ps fr) =
         (List [ Atom "UdpConfig"
-              -- , List [Atom "udpTarget", List [toSexp t1, toSexp t2, toSexp t3, toSexp t4]]
-              , List [Atom "udpTarget", List [toSexp t1, toSexp t2]]
-              , List [Atom "udpPorts", List (map toSexp ps)]
-              , List [Atom "failureRate", toSexp fr] ])
+              , List [ -- List [Atom "udpTarget", List [toSexp t1, toSexp t2, toSexp t3, toSexp t4]]
+                       List [Atom "udpTarget", List [toSexp t1, toSexp t2]]
+                     , List [Atom "udpPorts", List (map toSexp ps)]
+                     , List [Atom "failureRate", toSexp fr] ] ])
     manualSexp (ErlangConfig host cookie ()) = List [ Atom "ErlangConfig"
-                                                    , Atom host
-                                                    , Atom cookie
-                                                    , List [] ]
-    manualSexp EmptyConfig = List [ Atom "EmptyConfig" ]
+                                                    , List [ Atom host
+                                                           , Atom cookie
+                                                           , List [] ] ]
+    manualSexp EmptyConfig = List [ Atom "EmptyConfig", List [] ]
 
-    manualBoolSexp True = List [Atom "True"]
-    manualBoolSexp False = List [Atom "False"]
+    manualBoolSexp True = Atom "True"
+    manualBoolSexp False = Atom "False"
 
 --------------------------------
 -- QuickCheck Properties
