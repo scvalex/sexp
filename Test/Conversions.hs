@@ -1,4 +1,4 @@
-{-# LANGUAGE OverloadedStrings, DeriveDataTypeable #-}
+{-# LANGUAGE OverloadedStrings, DeriveGeneric #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
 module Main where
@@ -8,6 +8,7 @@ import Data.ByteString.Lazy.Char8 hiding ( map, concat )
 import Data.Data ( Typeable, Data )
 import Data.Monoid
 import Data.Sexp
+import GHC.Generics ( Generic )
 import Language.Sexp
 import Test.Framework
 import Test.Framework.Providers.HUnit
@@ -63,7 +64,7 @@ basicTypeTests =
     ]
 
 data Fallback a = None | Fallback a (Fallback a)
-                deriving ( Data, Eq, Show, Typeable )
+                deriving ( Eq, Generic, Show )
 
 data Config = TcpConfig { useSSL :: Bool
                         , target :: ByteString
@@ -76,7 +77,7 @@ data Config = TcpConfig { useSSL :: Bool
                         }
             | ErlangConfig ByteString ByteString ()
             | EmptyConfig
-            deriving ( Data, Eq, Show, Typeable )
+            deriving ( Eq, Generic, Show )
 
 -- FIXME Test encoding/decoding of this.
 -- data EmptyConfig
