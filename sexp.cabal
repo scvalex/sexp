@@ -24,7 +24,7 @@ Source-repository head
 Library
   Build-depends:        base >= 4.6 && < 5, attoparsec, bytestring, mtl
   Ghc-options:          -Wall
-  Extensions:           ScopedTypeVariables
+  Extensions:           ScopedTypeVariables, OverloadedStrings
   Exposed-modules:      Data.Sexp, Language.Sexp, Language.Sexp.Parser,
                         Language.Sexp.Printer
 
@@ -32,7 +32,7 @@ Executable sexp
   Build-depends:        base >= 4.6 && < 5, attoparsec, bytestring, cmdargs,
                         mtl
   Ghc-options:          -Wall
-  Extensions:           ScopedTypeVariables
+  Extensions:           ScopedTypeVariables, OverloadedStrings
   Main-is:              sexp-tool.hs
 
 Test-suite conversions
@@ -42,7 +42,7 @@ Test-suite conversions
 
   Build-Depends:        base >= 4.6 && <5, attoparsec, bytestring, mtl
   Ghc-Options:          -Wall
-  Extensions:           ScopedTypeVariables
+  Extensions:           ScopedTypeVariables, OverloadedStrings
 
   Build-Depends:        test-framework, test-framework-hunit, HUnit,
                         test-framework-quickcheck2, QuickCheck

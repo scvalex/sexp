@@ -1,4 +1,4 @@
-{-# LANGUAGE OverloadedStrings, DefaultSignatures #-}
+{-# LANGUAGE DefaultSignatures, FlexibleContexts #-}
 
 -- | S-Expressions are represented by 'Sexp'.  Conversions of arbitrary types with 'Data'
 -- instances are done through 'toSexp' and 'fromSexp'.
@@ -21,12 +21,9 @@ module Data.Sexp (
         escape, unescape
     ) where
 
-import Control.Applicative
-import Data.ByteString.Lazy.Char8 as BL hiding ( dropWhile, map, null, zipWith, length, elem )
-import qualified Data.ByteString as BS
-import Control.Monad.State ( get, put, execState, modify,
-                             lift, StateT(..), evalStateT )
-import Text.Printf ( printf )
+import Data.ByteString.Lazy.Char8 ( ByteString )
+import GHC.Generics ( Generic, Rep(..), M1(..) )
+import qualified Data.ByteString.Lazy.Char8 as BL
 
 -- | A 'ByteString'-based S-Expression.  Conceptually, a 'Sexp' is
 -- either an single atom represented by a 'ByteString', or a list of
@@ -38,9 +35,22 @@ class Sexpable a where
     toSexp :: a -> Sexp
     fromSexp :: (Monad m) => Sexp -> m a
 
+    default toSexp :: (Generic a, GSexpable (Rep a)) => a -> Sexp
+    toSexp = gToSexp . from
+
+    default fromSexp :: (Generic a, GSexpable (Rep a)) => Sexp -> a
+    fromSexp = to . gFromSexp
+
 ----------------------
 -- GHC.Generics-based generic encoding/decoding
 ----------------------
+
+class GSexpable f where
+    gToSexp :: f a -> Sexp
+    gFromSexp :: Sexp -> f a
+
+instance (GSexpable a) => GSexpable (M1 i c a) where
+    gToSexp = gToSexp . unM1
 
 ----------------------
 -- Helpers
@@ -57,7 +67,7 @@ escape = BL.concatMap escapeChar
 
 -- | The inverse of 'escape'.
 unescape :: ByteString -> ByteString
-unescape = BL.reverse . pack . snd . (BL.foldl' unescapeChar (False, []))
+unescape = BL.reverse . BL.pack . snd . (BL.foldl' unescapeChar (False, []))
   where
     unescapeChar :: (Bool, [Char]) -> Char -> (Bool, [Char])
     unescapeChar (False, cs) '\\' = (True, cs)
