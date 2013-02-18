@@ -53,6 +53,7 @@ import Data.Bits ( shiftR )
 import Data.ByteString.Lazy.Char8 ( ByteString )
 import Data.DList ( DList )
 import Data.Monoid ( Monoid(..) )
+import Data.String ( IsString(..) )
 import Data.Vector ( Vector )
 import GHC.Generics
 import Text.Printf ( printf )
@@ -66,6 +67,9 @@ import qualified Data.Vector.Mutable as VM
 -- 'Sexp'.
 data Sexp = List [Sexp] | Atom ByteString
           deriving ( Eq, Show )
+
+-- instance IsString Sexp where
+--     fromString = Atom . BL.pack
 
 class Sexpable a where
     toSexp :: a -> Sexp
