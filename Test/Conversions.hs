@@ -108,7 +108,7 @@ gTests = let config1 = TcpConfig True "www.google.com" (Fallback 443 (Fallback 8
 
     singleConfigTest =
         testCase "singleConfig" (assertEqual "" (List [ "SingleConfig"
-                                                      , List ["getConfig", "23"]])
+                                                      , List [List ["getConfig", "23"]]])
                                                 (toSexp (SingleConfig 23)))
 
     manualFallbackSexp None =

@@ -290,7 +290,7 @@ instance (GToSum a, GToSum b) => GToSum (a :+: b) where
     gToSum (R1 x) = gToSum x
 
 instance (Constructor c, GSexpable a, ConsSexpable a) => GToSum (C1 c a) where
-    gToSum x = List [Atom (BL.pack (conName (undefined :: t c a p))), gToSexp x]
+    gToSum x = gToSexp x
 
 ----------------------
 -- GHC.Generics-based generic encoding/decoding
@@ -313,8 +313,8 @@ instance GSexpable U1 where
     gFromSexp (List []) = return U1
     gFromSexp _         = fail "expecting empty constructor"
 
-instance (ConsSexpable a) => GSexpable (C1 c a) where
-    gToSexp = consToSexp . unM1
+instance (Constructor c, ConsSexpable a) => GSexpable (C1 c a) where
+    gToSexp x = List [Atom (BL.pack (conName (undefined :: t c a p))), consToSexp (unM1 x)]
     gFromSexp s = M1 <$> consFromSexp s
 
 instance ( GProductToSexp a, GProductToSexp b
