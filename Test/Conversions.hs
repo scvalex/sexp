@@ -15,6 +15,7 @@ import Test.Framework.Providers.QuickCheck2
 import Test.HUnit hiding ( Test )
 import Test.QuickCheck
 import qualified Data.ByteString as BS
+import qualified Data.Set as S
 
 main :: IO ()
 main = defaultMainWithOpts tests options
@@ -62,6 +63,7 @@ basicTypeTests =
            , typeTest "strictBytestring" ("ana" :: BS.ByteString) "ana"
            , typeTest "string" ("ana" :: String) "ana"
            , typeTest "unit" () (List [])
+           , typeTest "set" (S.fromList [9 :: Int, 0, 2, 1, 0]) (List ["0", "1", "2", "9"])
            ]
   where
     typeTest :: (Sexpable a, Show a, Eq a) => String -> a -> Sexp -> [Test]

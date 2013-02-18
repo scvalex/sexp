@@ -60,6 +60,7 @@ import Text.Printf ( printf )
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy.Char8 as BL
 import qualified Data.DList as DL
+import qualified Data.Set as S
 import qualified Data.Vector as V
 import qualified Data.Vector.Mutable as VM
 
@@ -135,6 +136,11 @@ instance (Sexpable a) => Sexpable [a] where
     toSexp xs = List (map toSexp xs)
     fromSexp (List ss) = mapM fromSexp ss
     fromSexp _         = fail "expecting list"
+
+instance (Sexpable a, Ord a) => Sexpable (S.Set a) where
+    toSexp = List . map toSexp . S.toList
+    fromSexp (List ss) = S.fromList <$> mapM fromSexp ss
+    fromSexp _         = fail "expecting set list"
 
 instance (Sexpable a, Sexpable b) => Sexpable (a, b) where
     toSexp (x, y) = List [toSexp x, toSexp y]
