@@ -57,6 +57,7 @@ basicTypeTests =
            , typeTest "string" ("ana" :: String) "ana"
            , typeTest "boolFalse" False "False"
            , typeTest "boolTrue" True "True"
+           , typeTest "unit" () (List [])
            ]
   where
     typeTest :: (Sexpable a, Show a, Eq a) => String -> a -> Sexp -> [Test]
