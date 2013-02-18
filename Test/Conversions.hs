@@ -14,6 +14,7 @@ import Test.Framework.Providers.HUnit
 import Test.Framework.Providers.QuickCheck2
 import Test.HUnit hiding ( Test )
 import Test.QuickCheck
+import qualified Data.ByteString as BS
 
 main :: IO ()
 main = defaultMainWithOpts tests options
@@ -58,6 +59,7 @@ basicTypeTests =
            , typeTest "int" (42 :: Int) "42"
            , typeTest "integer" (42 :: Integer) "42"
            , typeTest "bytestring" ("ana" :: ByteString) "ana"
+           , typeTest "strictBytestring" ("ana" :: BS.ByteString) "ana"
            , typeTest "string" ("ana" :: String) "ana"
            , typeTest "unit" () (List [])
            ]

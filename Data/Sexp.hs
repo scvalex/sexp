@@ -57,6 +57,7 @@ import Data.String ( IsString(..) )
 import Data.Vector ( Vector )
 import GHC.Generics
 import Text.Printf ( printf )
+import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy.Char8 as BL
 import qualified Data.DList as DL
 import qualified Data.Vector as V
@@ -118,6 +119,11 @@ instance Sexpable () where
 instance Sexpable ByteString where
     toSexp = Atom
     fromSexp (Atom s) = return s
+    fromSexp _        = fail "expecting bytestring atom"
+
+instance Sexpable BS.ByteString where
+    toSexp = Atom . BL.fromChunks . (:[])
+    fromSexp (Atom s) = return (BS.concat (BL.toChunks s))
     fromSexp _        = fail "expecting bytestring atom"
 
 instance Sexpable String where
