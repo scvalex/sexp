@@ -21,8 +21,9 @@ module Data.Sexp (
         escape, unescape
     ) where
 
+import Control.Applicative ( (<$>) )
 import Data.ByteString.Lazy.Char8 ( ByteString )
-import GHC.Generics ( Generic, Rep(..), M1(..) )
+import GHC.Generics ( Generic, Rep(..), M1(..), K1(..), U1(..) )
 import qualified Data.ByteString.Lazy.Char8 as BL
 
 -- | A 'ByteString'-based S-Expression.  Conceptually, a 'Sexp' is
@@ -38,8 +39,8 @@ class Sexpable a where
     default toSexp :: (Generic a, GSexpable (Rep a)) => a -> Sexp
     toSexp = gToSexp . from
 
-    default fromSexp :: (Generic a, GSexpable (Rep a)) => Sexp -> a
-    fromSexp = to . gFromSexp
+    default fromSexp :: (Generic a, GSexpable (Rep a), Monad m, Functor m) => Sexp -> m a
+    fromSexp s = to <$> gFromSexp s
 
 ----------------------
 -- GHC.Generics-based generic encoding/decoding
@@ -47,10 +48,20 @@ class Sexpable a where
 
 class GSexpable f where
     gToSexp :: f a -> Sexp
-    gFromSexp :: Sexp -> f a
+    gFromSexp :: (Monad m, Functor m) => Sexp -> m (f a)
 
 instance (GSexpable a) => GSexpable (M1 i c a) where
     gToSexp = gToSexp . unM1
+    gFromSexp s = M1 <$> gFromSexp s
+
+instance (Sexpable a) => GSexpable (K1 i a) where
+    gToSexp = toSexp . unK1
+    gFromSexp s = K1 <$> fromSexp s
+
+instance GSexpable U1 where
+    gToSexp _ = List []
+    gFromSexp (List []) = return U1
+    gFromSexp _         = fail "expecting empty constructor"
 
 ----------------------
 -- Helpers
