@@ -81,6 +81,11 @@ data Config = TcpConfig { useSSL :: Bool
 
 instance Sexpable Config
 
+data SingleConfig = SingleConfig { getConfig :: Int }
+                  deriving ( Generic )
+
+instance Sexpable SingleConfig
+
 gTests :: [Test]
 gTests = let config1 = TcpConfig True "www.google.com" (Fallback 443 (Fallback 80 None))
              config2 = UdpConfig (192, 168, 0, 1) [20, 21, 22] 0.12
@@ -94,6 +99,7 @@ gTests = let config1 = TcpConfig True "www.google.com" (Fallback 443 (Fallback 8
             , idSexpTest "config3id" config3
             , manualSexpTest "config4" config4
             , idSexpTest "config4id" config4
+            , singleConfigTest
             ]
   where
     manualSexpTest name config =
@@ -103,6 +109,11 @@ gTests = let config1 = TcpConfig True "www.google.com" (Fallback 443 (Fallback 8
         testCase name (assertEqual ""
                        (Right config :: Either String Config)
                        (fromSexp (toSexp config)))
+
+    singleConfigTest =
+        testCase "singleConfig" (assertEqual "" (List [Atom "SingleConfig",
+                                                       List [Atom "getConfig", Atom "23"]])
+                                                (toSexp (SingleConfig 23)))
 
     manualFallbackSexp None =
         List [Atom "None" , List []]
