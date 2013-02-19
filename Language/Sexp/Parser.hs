@@ -7,15 +7,15 @@ module Language.Sexp.Parser (
 
 import Control.Applicative ( (<$>), (<*), (*>), many )
 import Control.Exception ( Exception )
-import qualified Control.Exception as CE
-import Data.Attoparsec.ByteString.Lazy ( Parser, Result(..) )
 import Data.Attoparsec.ByteString.Char8 ( char, space, notInClass, (<?>) )
-import qualified Data.Attoparsec.ByteString.Char8 as AC
+import Data.Attoparsec.ByteString.Lazy ( Parser, Result(..) )
 import Data.Attoparsec.Combinator ( choice )
-import qualified Data.Attoparsec.ByteString.Lazy as A
 import Data.ByteString.Lazy as BS
 import Data.Sexp ( Sexp(..), unescape )
 import Data.Typeable ( Typeable )
+import qualified Control.Exception as CE
+import qualified Data.Attoparsec.ByteString.Char8 as AC
+import qualified Data.Attoparsec.ByteString.Lazy as A
 
 data ParseException = ParseException String ByteString
                     deriving ( Show, Typeable )

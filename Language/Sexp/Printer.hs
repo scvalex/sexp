@@ -4,9 +4,9 @@ module Language.Sexp.Printer (
         printHum, printMach
     ) where
 
-import qualified Data.ByteString.Lazy.Char8 as BS
 import Data.ByteString.Lazy.Char8 ( ByteString )
 import Data.Sexp ( Sexp(..), escape )
+import qualified Data.ByteString.Lazy.Char8 as BS
 
 -- | Maximum length of a list in chars for it to be on a single line.
 singleLineCutoff :: Int
