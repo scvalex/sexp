@@ -72,6 +72,7 @@ basicTypeTests =
                                (List [List ["4", "F"], List ["9", "A+"]])
            , typeTest "eitherLeft" (Left "borked" :: Either String Int) (List ["Left", "borked"])
            , typeTest "eitherRight" (Right 5 :: Either String Int) (List ["Right", "5"])
+             -- FIXME This would be more normal: List ["Just", List ["23"]]
            , typeTest "maybeJust" (Just 23 :: Maybe Int) (List ["Just", "23"])
            , typeTest "maybeNothing" (Nothing :: Maybe Int) (List ["Nothing", List []])
            ]
