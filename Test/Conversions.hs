@@ -70,6 +70,8 @@ basicTypeTests =
                             (List [List ["alex", "22"], List ["ingrid", "21"]])
            , typeTest "intmap" (IM.fromList [(9, "A+" :: ByteString), (4, "F")])
                                (List [List ["4", "F"], List ["9", "A+"]])
+           , typeTest "eitherLeft" (Left "borked" :: Either String Int) (List ["Left", "borked"])
+           , typeTest "eitherRight" (Right 5 :: Either String Int) (List ["Right", "5"])
            ]
   where
     typeTest :: (Sexpable a, Show a, Eq a) => String -> a -> Sexp -> [Test]

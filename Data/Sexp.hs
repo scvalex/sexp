@@ -179,6 +179,8 @@ instance (Sexpable a, Sexpable b, Sexpable c, Sexpable d, Sexpable e)
     fromSexp _ =
         fail "expecting 5-tuple"
 
+instance (Sexpable a, Sexpable b) => Sexpable (Either a b)
+
 ----------------------
 -- What is a record?
 ----------------------
