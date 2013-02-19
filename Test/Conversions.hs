@@ -15,6 +15,7 @@ import Test.Framework.Providers.QuickCheck2
 import Test.HUnit hiding ( Test )
 import Test.QuickCheck
 import qualified Data.ByteString as BS
+import qualified Data.IntMap as IM
 import qualified Data.Map as M
 import qualified Data.Set as S
 
@@ -67,6 +68,8 @@ basicTypeTests =
            , typeTest "set" (S.fromList [9 :: Int, 0, 2, 1, 0]) (List ["0", "1", "2", "9"])
            , typeTest "map" (M.fromList [("alex" :: String, 22 :: Int), ("ingrid", 21)])
                             (List [List ["alex", "22"], List ["ingrid", "21"]])
+           , typeTest "intmap" (IM.fromList [(9, "A+" :: ByteString), (4, "F")])
+                               (List [List ["4", "F"], List ["9", "A+"]])
            ]
   where
     typeTest :: (Sexpable a, Show a, Eq a) => String -> a -> Sexp -> [Test]

@@ -60,6 +60,7 @@ import Text.Printf ( printf )
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy.Char8 as BL
 import qualified Data.DList as DL
+import qualified Data.IntMap as IM
 import qualified Data.Map as M
 import qualified Data.Set as S
 import qualified Data.Vector as V
@@ -146,6 +147,11 @@ instance (Sexpable a, Ord a) => Sexpable (S.Set a) where
 instance (Sexpable k, Sexpable v, Ord k) => Sexpable (M.Map k v) where
     toSexp = List . map toSexp . M.toList
     fromSexp (List ss) = M.fromList <$> mapM fromSexp ss
+    fromSexp _         = fail "expecting map list"
+
+instance (Sexpable v) => Sexpable (IM.IntMap v) where
+    toSexp = List . map toSexp . IM.toList
+    fromSexp (List ss) = IM.fromList <$> mapM fromSexp ss
     fromSexp _         = fail "expecting map list"
 
 instance (Sexpable a, Sexpable b) => Sexpable (a, b) where
