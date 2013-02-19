@@ -181,6 +181,8 @@ instance (Sexpable a, Sexpable b, Sexpable c, Sexpable d, Sexpable e)
 
 instance (Sexpable a, Sexpable b) => Sexpable (Either a b)
 
+instance (Sexpable a) => Sexpable (Maybe a)
+
 ----------------------
 -- What is a record?
 ----------------------
