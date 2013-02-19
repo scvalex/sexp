@@ -10,12 +10,13 @@ import Control.Exception ( Exception )
 import Data.Attoparsec.ByteString.Char8 ( char, space, notInClass, (<?>) )
 import Data.Attoparsec.ByteString.Lazy ( Parser, Result(..) )
 import Data.Attoparsec.Combinator ( choice )
-import Data.ByteString.Lazy as BS
+import Data.ByteString.Lazy.Char8 ( ByteString )
 import Data.Sexp ( Sexp(..), unescape )
 import Data.Typeable ( Typeable )
 import qualified Control.Exception as CE
 import qualified Data.Attoparsec.ByteString.Char8 as AC
 import qualified Data.Attoparsec.ByteString.Lazy as A
+import qualified Data.ByteString.Lazy.Char8 as BL
 
 data ParseException = ParseException String ByteString
                     deriving ( Show, Typeable )
@@ -31,7 +32,7 @@ parse = resultToEither . A.parse (whiteSpace *> many sexpParser)
     resultToEither (Fail leftover _ctxs reason) =
         Left (reason, leftover)
     resultToEither (Done leftover sexps) =
-        if BS.null leftover
+        if BL.null leftover
         then Right sexps
         else Left ("garbage at end", leftover)
 
@@ -65,8 +66,8 @@ sexpParser =
   where
     list = List <$> (char '(' *> whiteSpace *> many sexpParser <* char ')') <* whiteSpace
     atom = Atom . unescape <$> (choice [string, anything]) <* whiteSpace
-    string = fromStrict <$> (char '"' *> AC.scan False escapedStringScanner <* char '"')
-    anything = fromStrict <$> AC.takeWhile1 (notInClass " \t\n()")
+    string = BL.fromChunks . (:[]) <$> (char '"' *> AC.scan False escapedStringScanner <* char '"')
+    anything = BL.fromChunks . (:[]) <$> AC.takeWhile1 (notInClass " \t\n()")
 
     -- Scan an escaped string.
     escapedStringScanner :: Bool -> Char -> Maybe Bool
