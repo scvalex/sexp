@@ -183,6 +183,10 @@ instance (Sexpable a, Sexpable b) => Sexpable (Either a b)
 
 instance (Sexpable a) => Sexpable (Maybe a)
 
+instance Sexpable Sexp where
+    toSexp = id
+    fromSexp = return
+
 ----------------------
 -- What is a record?
 ----------------------

@@ -75,6 +75,7 @@ basicTypeTests =
              -- FIXME This would be more normal: List ["Just", List ["23"]]
            , typeTest "maybeJust" (Just 23 :: Maybe Int) (List ["Just", "23"])
            , typeTest "maybeNothing" (Nothing :: Maybe Int) (List ["Nothing", List []])
+           , typeTest "sexp" (List ["foo", List ["bar"]]) (List ["foo", List ["bar"]])
            ]
   where
     typeTest :: (Sexpable a, Show a, Eq a) => String -> a -> Sexp -> [Test]
