@@ -42,6 +42,7 @@ Test-suite conversions
   Type:                 exitcode-stdio-1.0
   Ghc-Options:          -Wall
   Extensions:           ScopedTypeVariables, OverloadedStrings
-  Build-Depends:        base >= 4.4 && <5, bytestring, containers, sexp,
+  Build-Depends:        base >= 4.4 && <5, bytestring, containers, ghc-prim,
+                        sexp,
                         test-framework, test-framework-hunit, HUnit,
                         test-framework-quickcheck2, QuickCheck
