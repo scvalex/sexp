@@ -8,7 +8,7 @@ build: dist/setup-config
 	rm -rf _site _cache
 	$(CABAL) build
 
-dist:
+dist: test
 	$(CABAL) sdist
 
 install: build
