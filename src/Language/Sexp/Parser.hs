@@ -55,9 +55,10 @@ parseExn text =
 -- following EBNF:
 --
 -- SEXP           ::= '(' ATOM* ')' | ATOM
--- ATOM           ::= '"' ESCAPED_STRING* '"' | [^ \t\n()]+
--- ESCAPED_STRING ::= ...
 --
+-- ATOM           ::= '"' ESCAPED_STRING* '"' | [^ \t\n()]+
+--
+-- ESCAPED_STRING ::= ...
 sexpParser :: Parser Sexp
 sexpParser =
     choice [ list <?> "list"
