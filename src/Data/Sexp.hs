@@ -37,8 +37,6 @@
 --     fromSexp (List [Atom "this", Atom "is", s]) = Foo <$> fromSexp s
 --     fromSexp _                                  = fail "invalid MyType sexp"
 -- @
---
--- Thank you, @aeson@, for the model code for this module.
 module Data.Sexp (
         -- * S-Expressions
         Sexp(..), Sexpable(..),
