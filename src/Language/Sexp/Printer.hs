@@ -23,7 +23,7 @@ printMach (Atom s)  = let es = escape s
     shouldQuote es = BS.null es
                      || BS.find (\c -> (c < 'A' || 'z' < c)
                                        && (c < '0' || '9' < c)
-                                       && not (c `elem` "-_+~<>='/*")) es /= Nothing
+                                       && not (c `elem` ("-_+~<>='/*" :: String))) es /= Nothing
 printMach (List xs) = makeList (map printMach xs)
 
 -- | Turn @["a", "(b)", "c"]@ into @(a (b) c)@.
