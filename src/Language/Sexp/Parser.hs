@@ -54,7 +54,7 @@ parseExn text =
 -- | A parser for S-Expressions.  Ignoring whitespace, we follow the
 -- following EBNF:
 --
--- SEXP           ::= '(' ATOM* ')' | ATOM
+-- SEXP           ::= '(' SEXP* ')' | ATOM
 --
 -- ATOM           ::= '"' ESCAPED_STRING* '"' | [^ \t\n()]+
 --
