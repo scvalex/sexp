@@ -1,7 +1,8 @@
 {-# LANGUAGE DefaultSignatures, FlexibleContexts, MultiParamTypeClasses #-}
 {-# LANGUAGE TypeSynonymInstances, FlexibleInstances, KindSignatures, TypeOperators #-}
 {-# LANGUAGE FunctionalDependencies, EmptyDataDecls, UndecidableInstances #-}
-{-# LANGUAGE OverlappingInstances, ViewPatterns #-}
+--{-# LANGUAGE OverlappingInstances, ViewPatterns #-}
+{-# LANGUAGE ViewPatterns #-}
 
 -- | S-Expressions are represented by 'Sexp'.  Conversion to and from arbitrary types is
 -- done through 'Sexpable'.
@@ -127,12 +128,12 @@ instance Sexpable BS.ByteString where
     fromSexp (Atom s) = return (BS.concat (BL.toChunks s))
     fromSexp _        = fail "expecting bytestring atom"
 
-instance Sexpable String where
+instance {-# OVERLAPPING #-} Sexpable String where
     toSexp = Atom . BL.pack
     fromSexp (Atom s) = return (BL.unpack s)
     fromSexp _        = fail "expecting string atom"
 
-instance (Sexpable a) => Sexpable [a] where
+instance {-# OVERLAPPABLE #-} (Sexpable a) => Sexpable [a] where
     toSexp xs = List (map toSexp xs)
     fromSexp (List ss) = mapM fromSexp ss
     fromSexp _         = fail "expecting list"
@@ -195,8 +196,8 @@ data True
 data False
 
 instance (IsRecord f b) => IsRecord (f :*: g) b
-instance IsRecord (M1 S NoSelector f) False
-instance (IsRecord f b) => IsRecord (M1 S c f) b
+instance {-# OVERLAPPING #-} IsRecord (M1 S NoSelector f) False
+instance {-# OVERLAPPABLE #-} (IsRecord f b) => IsRecord (M1 S c f) b
 instance IsRecord (K1 i c) True
 instance IsRecord U1 False
 
@@ -302,7 +303,7 @@ instance (GSexpable a) => GFromProduct (S1 s a) where
 class GProductToSexp f where
     gProductToSexp :: VM.MVector s Sexp -> Int -> Int -> f a -> ST s ()
 
-instance (GProductToSexp a, GProductToSexp b) => GProductToSexp (a :*: b) where
+instance {-# OVERLAPPING #-} (GProductToSexp a, GProductToSexp b) => GProductToSexp (a :*: b) where
     gProductToSexp mv ix len (a :*: b) = do
         gProductToSexp mv ix lenL a
         gProductToSexp mv ixR lenR b
@@ -311,7 +312,7 @@ instance (GProductToSexp a, GProductToSexp b) => GProductToSexp (a :*: b) where
         ixR = ix + lenL
         lenR = len - lenL
 
-instance (GSexpable a) => GProductToSexp a where
+instance {-# OVERLAPPABLE #-} (GSexpable a) => GProductToSexp a where
     gProductToSexp mv ix _ = VM.unsafeWrite mv ix . gToSexp
 
 ----------------------
@@ -348,7 +349,7 @@ class GSexpable f where
     gToSexp :: f a -> Sexp
     gFromSexp :: (Monad m, Applicative m) => Sexp -> m (f a)
 
-instance (GSexpable a) => GSexpable (M1 i c a) where
+instance {-# OVERLAPPABLE #-} (GSexpable a) => GSexpable (M1 i c a) where
     gToSexp = gToSexp . unM1
     gFromSexp s = M1 <$> gFromSexp s
 
@@ -361,7 +362,7 @@ instance GSexpable U1 where
     gFromSexp (List []) = return U1
     gFromSexp _         = fail "expecting empty constructor"
 
-instance (Constructor c, ConsSexpable a) => GSexpable (C1 c a) where
+instance {-# OVERLAPPING #-} (Constructor c, ConsSexpable a) => GSexpable (C1 c a) where
     gToSexp x = List [Atom (BL.pack (conName (undefined :: t c a p))), consToSexp (unM1 x)]
 
     gFromSexp (List [Atom ktr, fs])
